@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HTML Renderer – Grist Widget</title>
+  <style>
+    /* ── Grist-matching tokens ── */
+    :root {
+      --grist-bg:         #ffffff;
+      --grist-row-alt:    #f7f7f7;
+      --grist-border:     #e8e8e8;
+      --grist-header-bg:  #f0f0f0;
+      --grist-header-txt: #6a6a6a;
+      --grist-text:       #262633;
+      --grist-text-muted: #929299;
+      --grist-accent:     #16b378;
+      --grist-select-bg:  #e8f5f0;
+      --grist-hover:      #f5f5f5;
+      --grist-font:       -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --row-height:       32px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--grist-font);
+      font-size: 13px;
+      color: var(--grist-text);
+      background: var(--grist-bg);
+      overflow: hidden;
+    }
+
+    /* ── Layout ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── Topbar (col picker) – slim, Grist-style ── */
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: var(--grist-header-bg);
+      border-bottom: 1px solid var(--grist-border);
+      flex-shrink: 0;
+      min-height: 34px;
+    }
+
+    #topbar label {
+      font-size: 11px;
+      color: var(--grist-header-txt);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    #colSelect {
+      font-family: var(--grist-font);
+      font-size: 12px;
+      color: var(--grist-text);
+      background: var(--grist-bg);
+      border: 1px solid var(--grist-border);
+      border-radius: 3px;
+      padding: 3px 6px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    #colSelect:focus { border-color: var(--grist-accent); }
+
+    /* ── Table container ── */
+    #tableWrap {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* sticky header */
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--grist-header-bg);
+      color: var(--grist-header-txt);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 0 10px;
+      height: var(--row-height);
+      border-bottom: 1px solid var(--grist-border);
+      border-right: 1px solid var(--grist-border);
+      text-align: left;
+      user-select: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Row number col */
+    th.col-num,
+    td.col-num {
+      width: 40px;
+      min-width: 40px;
+      max-width: 40px;
+      text-align: right;
+      color: var(--grist-text-muted);
+      font-size: 11px;
+      padding-right: 8px;
+      border-right: 1px solid var(--grist-border);
+      background: var(--grist-header-bg);
+      flex-shrink: 0;
+    }
+
+    /* Rendered col takes all remaining width */
+    th.col-render,
+    td.col-render {
+      width: calc(100% - 40px);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--grist-border);
+    }
+
+    tbody tr:nth-child(even) td { background: var(--grist-row-alt); }
+    tbody tr:nth-child(even) td.col-num { background: #ebebeb; }
+
+    tbody tr:hover td { background: var(--grist-hover); }
+    tbody tr:hover td.col-num { background: #e5e5e5; }
+
+    td {
+      padding: 5px 10px;
+      vertical-align: top;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    td.col-num {
+      padding: 5px 8px 5px 0;
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Rendered HTML content ── */
+    .cell-html {
+      font-family: var(--grist-font);
+      font-size: 13px;
+      color: var(--grist-text);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* Reset & basic styling for user HTML */
+    .cell-html * { max-width: 100%; }
+    .cell-html p  { margin: 0 0 .3em; }
+    .cell-html p:last-child { margin-bottom: 0; }
+    .cell-html h1 { font-size: 18px; font-weight: 700; margin: 0 0 .3em; }
+    .cell-html h2 { font-size: 15px; font-weight: 700; margin: 0 0 .3em; }
+    .cell-html h3 { font-size: 13px; font-weight: 700; margin: 0 0 .2em; }
+    .cell-html ul,
+    .cell-html ol { padding-left: 1.4em; margin: .2em 0; }
+    .cell-html li { margin: .1em 0; }
+    .cell-html a  { color: var(--grist-accent); text-decoration: none; }
+    .cell-html a:hover { text-decoration: underline; }
+    .cell-html strong, .cell-html b { font-weight: 600; }
+    .cell-html em, .cell-html i { font-style: italic; }
+    .cell-html code {
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 11px;
+      background: #f0f0f0;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .cell-html table {
+      border-collapse: collapse;
+      font-size: 12px;
+      margin: .3em 0;
+      width: auto;
+    }
+    .cell-html table td,
+    .cell-html table th {
+      border: 1px solid var(--grist-border);
+      padding: 3px 7px;
+      text-align: left;
+    }
+    .cell-html table th {
+      background: var(--grist-header-bg);
+      font-weight: 600;
+    }
+    .cell-html img { border-radius: 2px; }
+    .cell-html hr  { border: none; border-top: 1px solid var(--grist-border); margin: .4em 0; }
+
+    .cell-empty {
+      color: var(--grist-text-muted);
+      font-style: italic;
+    }
+
+    /* ── Empty / no-column state ── */
+    #emptyState {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+      color: var(--grist-text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 32px;
+    }
+
+    #emptyState svg { opacity: .4; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: #d0d0d0;
+      border-radius: 4px;
+      border: 2px solid var(--grist-bg);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <label for="colSelect">Colonne HTML :</label>
+    <select id="colSelect">
+      <option value="">— sélectionner —</option>
+    </select>
+  </div>
+
+  <div id="tableWrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num"></th>
+          <th class="col-render" id="colHeader">Rendu</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="8" width="32" height="26" rx="2" stroke="#929299" stroke-width="1.5"/>
+      <path d="M4 14h32M14 14v20" stroke="#929299" stroke-width="1.5"/>
+      <path d="M19 22l-3 2 3 2M25 22l3 2-3 2" stroke="#16b378" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span id="emptyMsg">Choisissez une colonne HTML ci-dessus.</span>
+  </div>
+
+</div>
+
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<script>
+  let selectedCol = '';
+  let currentRecords = [];
+
+  const colSelect  = document.getElementById('colSelect');
+  const tbody      = document.getElementById('tbody');
+  const tableWrap  = document.getElementById('tableWrap');
+  const emptyState = document.getElementById('emptyState');
+  const emptyMsg   = document.getElementById('emptyMsg');
+  const colHeader  = document.getElementById('colHeader');
+
+  /* ── Strip <script> tags before injecting HTML ── */
+  function safeHtml(raw) {
+    const div = document.createElement('div');
+    div.innerHTML = String(raw ?? '');
+    div.querySelectorAll('script').forEach(s => s.remove());
+    return div.innerHTML;
+  }
+
+  /* ── Show/hide table vs empty state ── */
+  function showTable(yes) {
+    tableWrap.style.display = yes ? '' : 'none';
+    emptyState.style.display = yes ? 'none' : 'flex';
+  }
+
+  /* ── Populate column selector ── */
+  function populateColumns(cols) {
+    const prev = colSelect.value;
+    colSelect.innerHTML = '<option value="">— sélectionner —</option>';
+    cols.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.label || c.id;
+      colSelect.appendChild(o);
+    });
+    if (prev && cols.find(c => c.id === prev)) {
+      colSelect.value = prev;
+      selectedCol = prev;
+    }
+  }
+
+  /* ── Render rows ── */
+  function renderRows(records) {
+    currentRecords = records || [];
+    tbody.innerHTML = '';
+
+    if (!selectedCol) {
+      showTable(false);
+      emptyMsg.textContent = 'Choisissez une colonne HTML ci-dessus.';
+      return;
+    }
+
+    if (currentRecords.length === 0) {
+      showTable(false);
+      emptyMsg.textContent = 'Aucune donnée dans la table.';
+      return;
+    }
+
+    colHeader.textContent = selectedCol;
+    showTable(true);
+
+    currentRecords.forEach((rec, i) => {
+      const raw = rec[selectedCol] ?? '';
+      const tr  = document.createElement('tr');
+
+      const tdNum = document.createElement('td');
+      tdNum.className = 'col-num';
+      tdNum.textContent = i + 1;
+      tr.appendChild(tdNum);
+
+      const tdRender = document.createElement('td');
+      tdRender.className = 'col-render';
+
+      if (String(raw).trim() === '') {
+        tdRender.innerHTML = '<span class="cell-empty">—</span>';
+      } else {
+        const inner = document.createElement('div');
+        inner.className = 'cell-html';
+        inner.innerHTML = safeHtml(raw);
+        tdRender.appendChild(inner);
+      }
+
+      tr.appendChild(tdRender);
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ── Column change ── */
+  colSelect.addEventListener('change', () => {
+    selectedCol = colSelect.value;
+    renderRows(currentRecords);
+  });
+
+  /* ── Grist integration ── */
+  if (typeof grist !== 'undefined') {
+    grist.ready({ requiredAccess: 'read table' });
+
+    grist.onOptions((options, interaction) => {
+      if (interaction?.columns) populateColumns(interaction.columns);
+    });
+
+    grist.onRecords((records) => {
+      if (records.length > 0 && colSelect.options.length <= 1) {
+        const cols = Object.keys(records[0])
+          .filter(k => k !== 'id')
+          .map(k => ({ id: k, label: k }));
+        populateColumns(cols);
+      }
+      renderRows(records);
+    });
+
+  } else {
+    /* ── Demo mode ── */
+    const demoCols = [
+      { id: 'contenu_html', label: 'contenu_html' },
+      { id: 'notes',        label: 'notes' },
+    ];
+    populateColumns(demoCols);
+    colSelect.value = 'contenu_html';
+    selectedCol     = 'contenu_html';
+
+    renderRows([
+      { id:1, contenu_html: '<strong>Jean Dupont</strong> – Directeur commercial', notes: '' },
+      { id:2, contenu_html: '<span style="color:#e53935">⚠ Urgent</span> Relancer avant vendredi', notes: '' },
+      { id:3, contenu_html: '<ul><li>Réunion 10h</li><li>Démo client 14h</li></ul>', notes: '' },
+      { id:4, contenu_html: '<a href="#">Voir le contrat</a> — signé le <em>12 juin 2025</em>', notes: '' },
+      { id:5, contenu_html: '', notes: '' },
+      { id:6, contenu_html: '<table><tr><th>Article</th><th>Qté</th></tr><tr><td>Stylos</td><td>12</td></tr><tr><td>Cahiers</td><td>4</td></tr></table>', notes: '' },
+    ]);
+  }
+</script>
+</body>
+</html>
