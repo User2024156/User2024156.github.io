@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HTML Column Renderer – Grist Widget</title>
+  <style>
+    /* ── Design tokens ── */
+    :root {
+      --bg:           #0f1117;
+      --surface:      #1a1d27;
+      --surface-alt:  #22263a;
+      --border:       #2e3349;
+      --accent:       #6c7bff;
+      --accent-dim:   #3d4699;
+      --text:         #dde1f5;
+      --text-muted:   #636b99;
+      --success:      #3dd68c;
+      --danger:       #ff5c7a;
+      --radius:       10px;
+      --mono:         'JetBrains Mono', 'Fira Mono', monospace;
+      --sans:         'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    header .logo {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: grid; place-items: center;
+      font-size: 14px; font-weight: 800; color: #fff;
+      letter-spacing: -.5px;
+    }
+
+    header h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    header .badge {
+      font-size: 10px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+
+    /* ── Config row ── */
+    #config {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    #config label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      white-space: nowrap;
+    }
+
+    #colSelect {
+      flex: 1;
+      min-width: 140px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    #colSelect:focus { border-color: var(--accent); }
+
+    #statusDot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+    #statusDot.ok   { background: var(--success); }
+    #statusDot.err  { background: var(--danger); }
+    #statusDot.wait { background: var(--accent); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1 } 50% { opacity: .3 }
+    }
+
+    #statusLabel {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ── Table wrapper ── */
+    #tableWrap {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    thead th:first-child { width: 52px; text-align: center; }
+    thead th.col-raw   { width: 42%; }
+    thead th.col-render { width: 58%; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    tbody tr:hover { background: var(--surface-alt); }
+
+    td {
+      padding: 8px 12px;
+      vertical-align: top;
+    }
+
+    td.row-num {
+      text-align: center;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      border-right: 1px solid var(--border);
+      width: 52px;
+    }
+
+    /* Raw source cell */
+    td.raw-cell {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    td.raw-cell.expanded { max-height: none; }
+
+    td.raw-cell::after {
+      content: '';
+      display: block;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 32px;
+      background: linear-gradient(transparent, var(--bg));
+      pointer-events: none;
+    }
+    td.raw-cell.expanded::after { display: none; }
+
+    /* Rendered cell – the actual HTML output */
+    td.render-cell {
+      background: #ffffff08;
+      border-radius: var(--radius);
+    }
+
+    td.render-cell .sandbox {
+      /* styles for user HTML content */
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    td.render-cell .sandbox * { max-width: 100%; }
+    td.render-cell .sandbox a { color: var(--accent); }
+    td.render-cell .sandbox h1,
+    td.render-cell .sandbox h2,
+    td.render-cell .sandbox h3 { color: var(--text); margin: .4em 0; }
+    td.render-cell .sandbox p  { margin: .3em 0; }
+    td.render-cell .sandbox ul,
+    td.render-cell .sandbox ol { padding-left: 1.4em; }
+    td.render-cell .sandbox table {
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    td.render-cell .sandbox td,
+    td.render-cell .sandbox th {
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+    }
+    td.render-cell .sandbox img { border-radius: 4px; }
+
+    /* empty / error state */
+    .empty-msg {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    /* ── Empty state (no data / no column) ── */
+    #emptyState {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 12px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    #emptyState svg { opacity: .35; }
+
+    #emptyState p {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    #emptyState strong { color: var(--text); }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">H</div>
+  <h1>HTML Column Renderer</h1>
+  <span class="badge">Grist Widget</span>
+</header>
+
+<div id="config">
+  <label for="colSelect">Colonne source</label>
+  <select id="colSelect">
+    <option value="">— Choisir une colonne —</option>
+  </select>
+  <span id="statusDot" title="État de la connexion"></span>
+  <span id="statusLabel">En attente de Grist…</span>
+</div>
+
+<div id="tableWrap" style="display:none">
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="col-raw">HTML source</th>
+        <th class="col-render">Rendu</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="emptyState">
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="16" width="48" height="36" rx="4" stroke="#6c7bff" stroke-width="2"/>
+    <path d="M20 32l-6 4 6 4M44 32l6 4-6 4M30 24l4 16" stroke="#6c7bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <p id="emptyMsg"><strong>Sélectionnez une colonne</strong> contenant du HTML dans le menu ci-dessus.</p>
+</div>
+
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<script>
+  /* ─────────────────────────────────────────────
+     State
+  ───────────────────────────────────────────── */
+  let selectedCol = '';
+  let currentData = [];
+  let allColumns  = [];
+
+  const colSelect   = document.getElementById('colSelect');
+  const statusDot   = document.getElementById('statusDot');
+  const statusLabel = document.getElementById('statusLabel');
+  const tbody       = document.getElementById('tbody');
+  const tableWrap   = document.getElementById('tableWrap');
+  const emptyState  = document.getElementById('emptyState');
+  const emptyMsg    = document.getElementById('emptyMsg');
+
+  /* ─────────────────────────────────────────────
+     Helpers
+  ───────────────────────────────────────────── */
+  function setStatus(state, msg) {
+    statusDot.className = state;       // 'ok' | 'err' | 'wait' | ''
+    statusLabel.textContent = msg;
+  }
+
+  function showTable(show) {
+    tableWrap.style.display = show ? 'block' : 'none';
+    emptyState.style.display = show ? 'none' : 'flex';
+  }
+
+  function sanitizeAndRender(html) {
+    // We use a detached DocumentFragment to avoid executing scripts.
+    // Scripts tags are stripped; everything else is kept.
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    tmp.querySelectorAll('script').forEach(s => s.remove());
+    return tmp.innerHTML;
+  }
+
+  /* ─────────────────────────────────────────────
+     Populate column selector
+  ───────────────────────────────────────────── */
+  function populateColumns(cols) {
+    allColumns = cols;
+    const prev = colSelect.value;
+    colSelect.innerHTML = '<option value="">— Choisir une colonne —</option>';
+    cols.forEach(col => {
+      const opt = document.createElement('option');
+      opt.value = col.id;
+      opt.textContent = col.label || col.id;
+      colSelect.appendChild(opt);
+    });
+    // Restore previous selection if still valid
+    if (prev && cols.find(c => c.id === prev)) {
+      colSelect.value = prev;
+      selectedCol = prev;
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     Render rows
+  ───────────────────────────────────────────── */
+  function renderRows(records) {
+    currentData = records;
+    tbody.innerHTML = '';
+
+    if (!selectedCol) {
+      showTable(false);
+      emptyMsg.innerHTML = '<strong>Sélectionnez une colonne</strong> contenant du HTML dans le menu ci-dessus.';
+      return;
+    }
+
+    if (!records || records.length === 0) {
+      showTable(false);
+      emptyMsg.innerHTML = 'Aucune donnée dans la table. Ajoutez des enregistrements dans Grist.';
+      return;
+    }
+
+    showTable(true);
+
+    records.forEach((rec, i) => {
+      const raw = (rec[selectedCol] ?? '');
+      const htmlStr = String(raw);
+
+      const tr = document.createElement('tr');
+
+      // Row number
+      const tdNum = document.createElement('td');
+      tdNum.className = 'row-num';
+      tdNum.textContent = i + 1;
+      tr.appendChild(tdNum);
+
+      // Raw source (truncated)
+      const tdRaw = document.createElement('td');
+      tdRaw.className = 'raw-cell';
+      tdRaw.textContent = htmlStr || '—';
+      if (htmlStr.length > 120) {
+        tdRaw.title = 'Cliquer pour développer';
+        tdRaw.style.cursor = 'pointer';
+        tdRaw.addEventListener('click', () => tdRaw.classList.toggle('expanded'));
+      } else {
+        tdRaw.classList.add('expanded');
+      }
+      tr.appendChild(tdRaw);
+
+      // Rendered output
+      const tdRender = document.createElement('td');
+      tdRender.className = 'render-cell';
+      if (htmlStr.trim() === '') {
+        tdRender.innerHTML = '<span class="empty-msg">Cellule vide</span>';
+      } else {
+        const sandbox = document.createElement('div');
+        sandbox.className = 'sandbox';
+        sandbox.innerHTML = sanitizeAndRender(htmlStr);
+        tdRender.appendChild(sandbox);
+      }
+      tr.appendChild(tdRender);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     Column selector change
+  ───────────────────────────────────────────── */
+  colSelect.addEventListener('change', () => {
+    selectedCol = colSelect.value;
+    renderRows(currentData);
+  });
+
+  /* ─────────────────────────────────────────────
+     Grist integration
+  ───────────────────────────────────────────── */
+  if (typeof grist !== 'undefined') {
+    setStatus('wait', 'Connexion à Grist…');
+
+    grist.ready({
+      requiredAccess: 'read table',
+      columns: []          // accept any columns
+    });
+
+    // Called when the table schema / columns change
+    grist.onOptions((options, interaction) => {
+      if (interaction && interaction.columns) {
+        populateColumns(interaction.columns);
+      }
+    });
+
+    // Called on every data change
+    grist.onRecords((records, mappings) => {
+      setStatus('ok', `${records.length} enregistrement(s) reçu(s)`);
+
+      // Try to derive columns from the first record keys
+      if (records.length > 0 && allColumns.length === 0) {
+        const cols = Object.keys(records[0])
+          .filter(k => k !== 'id')
+          .map(k => ({ id: k, label: k }));
+        populateColumns(cols);
+      }
+
+      renderRows(records);
+    });
+
+    // Connection heartbeat
+    grist.onNewRecord(() => {
+      setStatus('ok', 'Connecté');
+    });
+
+  } else {
+    /* ── Demo mode (no Grist host) ── */
+    setStatus('err', 'Hors de Grist – mode démo');
+
+    const demoCols = [
+      { id: 'html_content', label: 'html_content' },
+      { id: 'description', label: 'description' },
+    ];
+    populateColumns(demoCols);
+    colSelect.value = 'html_content';
+    selectedCol = 'html_content';
+
+    const demoRecords = [
+      {
+        id: 1,
+        html_content: '<h2>Bienvenue 👋</h2><p>Ce widget <strong>interprète du HTML</strong> ligne par ligne.</p>',
+        description: 'Titre + paragraphe'
+      },
+      {
+        id: 2,
+        html_content: '<ul><li>Pommes 🍎</li><li>Bananes 🍌</li><li>Cerises 🍒</li></ul>',
+        description: 'Liste non ordonnée'
+      },
+      {
+        id: 3,
+        html_content: '<table><tr><th>Produit</th><th>Prix</th></tr><tr><td>Stylo</td><td>1,20 €</td></tr><tr><td>Cahier</td><td>3,50 €</td></tr></table>',
+        description: 'Tableau HTML'
+      },
+      {
+        id: 4,
+        html_content: '<p style="color:#6c7bff;font-weight:700">Texte coloré en violet</p><a href="#">Un lien cliquable</a>',
+        description: 'Styles inline + lien'
+      },
+      {
+        id: 5,
+        html_content: '',
+        description: 'Cellule vide'
+      }
+    ];
+
+    renderRows(demoRecords);
+  }
+</script>
+</body>
+</html>
