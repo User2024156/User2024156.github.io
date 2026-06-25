@@ -463,7 +463,8 @@
     <div>
       <h1>Carte des sites concernés</h1>
       <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
-      <button class="btn secondary" onclick="mapSameRadius()" id="hide-button-map">Même rayon des sites</button>
+      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'constant')" id="hide-button-map">Rayons constants</button>
+      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'linear')" id="hide-button-map">Relation linéaire</button>
     </div>
   </header>
 
@@ -554,14 +555,18 @@
     }
   }
 
-  function areaMarkerfromEmission(emission,maxRadius){
+  function areaMarkerfromEmission(emission,maxRadius,typeMarker){
     const minRadius = 5;
     const minEmission = 10000;
     const maxEmission = 10000000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      //function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
-      function f(x) {return x;}
+      if(typeMarker=='logarithmique'){
+        function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
+      }
+      else if (typeMarker=='linear'){
+        function f(x) {return x;}
+      }
       function area(rad) {return Math.PI*rad**2;}
       const areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
       radius += (Math.sqrt(areaC))/Math.PI;
@@ -581,9 +586,9 @@
     XLSX.writeFile(workbook,filename);
   }
 
-  function mapSameRadius(){
+  function redrawMap(typerMarker){
     map.destroy();
-    renderMap(filtered_records_sites,false);
+    renderMap(filtered_records_sites,typerMarker);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
@@ -1068,7 +1073,7 @@ function renderSuggestion(records, reset, filtre_on) {
     markersLayer = L.layerGroup().addTo(map);
   }
 
-  function renderMap(records,propEmissions) {
+  function renderMap(records,typeMarker) {
       ensureMap();
 
       const emptyMap = document.getElementById("empty-map");
@@ -1108,7 +1113,7 @@ function renderSuggestion(records, reset, filtre_on) {
         let marker;
         if (p.lat != null && p.lon != null && p.lat != undefined && p.lon != undefined && p.lat != 0 && p.lon != 0){
           marker = L.circleMarker([p.lat, p.lon], {
-            radius : propEmissions == true ? areaMarkerfromEmission(last_ges,maxRadius) : 7,
+            radius : typeMarker == 'constant' ? 7 : areaMarkerfromEmission(last_ges,maxRadius,typeMarker),
             weight: 1,
             color: "#111827",
             fillColor: window.getComputedStyle(document.head).getPropertyValue('--color-' + filiere_css.toLowerCase()) || "#999",
@@ -1142,7 +1147,7 @@ function majGraphiques() {
   if (chartCO2Etat) chartCO2Etat.destroy();
   chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets);
   chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
-  renderMap(filtered_records_sites,true);
+  renderMap(filtered_records_sites,'logarithmique');
 }
 
   /* CONSTRUCTION DES GRAPHIQUES */
@@ -1324,7 +1329,7 @@ function majGraphiques() {
 
 
 
-    renderMap(filtered_records_sites,true);
+    renderMap(filtered_records_sites,'logarithmique');
 
     graphique_CO2_procede_annee(filtered_records_projets);
 
