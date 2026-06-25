@@ -463,6 +463,7 @@
     <div>
       <h1>Carte des sites concernés</h1>
       <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
+      <button class="btn secondary" onclick="mapSameRadius()" id="hide-button-map">Même rayon des sites</button>
     </div>
   </header>
 
@@ -578,6 +579,11 @@
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetname, filename);
     XLSX.writeFile(workbook,filename);
+  }
+
+  function mapSameRadius(){
+    map.destroy();
+    renderMap(filtered_records_sites,false);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
@@ -1062,7 +1068,7 @@ function renderSuggestion(records, reset, filtre_on) {
     markersLayer = L.layerGroup().addTo(map);
   }
 
-  function renderMap(records) {
+  function renderMap(records,propEmissions) {
       ensureMap();
 
       const emptyMap = document.getElementById("empty-map");
@@ -1102,8 +1108,7 @@ function renderSuggestion(records, reset, filtre_on) {
         let marker;
         if (p.lat != null && p.lon != null && p.lat != undefined && p.lon != undefined && p.lat != 0 && p.lon != 0){
           marker = L.circleMarker([p.lat, p.lon], {
-            // radius: 7,
-            radius : areaMarkerfromEmission(last_ges,maxRadius),
+            radius : propEmissions == true ? areaMarkerfromEmission(last_ges,maxRadius) : 7,
             weight: 1,
             color: "#111827",
             fillColor: window.getComputedStyle(document.head).getPropertyValue('--color-' + filiere_css.toLowerCase()) || "#999",
@@ -1137,7 +1142,7 @@ function majGraphiques() {
   if (chartCO2Etat) chartCO2Etat.destroy();
   chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets);
   chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
-  renderMap(filtered_records_sites);
+  renderMap(filtered_records_sites,true);
 }
 
   /* CONSTRUCTION DES GRAPHIQUES */
@@ -1319,7 +1324,7 @@ function majGraphiques() {
 
 
 
-    renderMap(filtered_records_sites);
+    renderMap(filtered_records_sites,true);
 
     graphique_CO2_procede_annee(filtered_records_projets);
 
