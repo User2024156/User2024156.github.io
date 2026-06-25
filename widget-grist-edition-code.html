@@ -441,8 +441,9 @@
 <!-- Graph des émissions abattues par procédé par années et du potentiel d'abattement selon l'état d'avancement des projets -->
 
     <header class='section-header'>
-      <div>
-        <h1>Emissions abattues </h1>
+      <h1>Emissions abattues </h1>
+      <div id="map-buttons">
+        <button class="btn secondary" onclick="exportToExcel(['Nom_du_site','Region','Perimetre','Filiere','Procede'],'Extraction Excel','Extraction')" id="export-button-chart">Rayons constants</button>
         <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button> 
       </div>
     </header>
@@ -464,10 +465,10 @@
   <header class='section-header'>
     <h1>Carte des sites concernés</h1>
     <div id="map-buttons">
-      <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
       <button class="btn secondary" onclick="redrawMap('constant')" id="const-button-map">Rayons constants</button>
       <button class="btn secondary" onclick="redrawMap('linear')" id="linear-button-map">Relation linéaire</button>
       <button class="btn secondary" onclick="redrawMap('logarithmique')" id="log-button-map">Relation logarithmique</button>
+      <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
     </div>
   </header>
 
@@ -579,7 +580,8 @@
   }
 
 
-  function exportToExcel(record,columns,sheetname,filename){
+  function exportToExcel(columns,sheetname,filename){
+    const record = filtered_records_projets;
     const colonnes = {};
     for (const c of columns){
       colonnes[c] = record[c];
