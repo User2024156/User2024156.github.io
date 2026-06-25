@@ -618,9 +618,8 @@
     XLSX.writeFile(workbook,filename);
   }
 
-  function redrawMap(typerMarker){
-    map.remove();
-    renderMap(filtered_records_sites,typerMarker);
+  function redrawMap(record,typerMarker){
+    renderMap(record,typerMarker);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
