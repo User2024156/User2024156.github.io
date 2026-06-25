@@ -441,7 +441,7 @@
     <header class='section-header'>
       <div>
         <h1>Emissions abattues </h1>
-        <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button>
+        <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button> 
       </div>
     </header>
 
@@ -569,14 +569,14 @@
   }
 
 
-  function exportToExcel(record,columns,filename){
+  function exportToExcel(record,columns,sheetname,filename){
     const colonnes = {};
     for (const c of columns){
       colonnes[c] = record[c];
     }
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, filename);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetname, filename);
     XLSX.writeFile(workbook,filename);
   }
 
