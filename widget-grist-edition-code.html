@@ -16,6 +16,9 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Sheet JS (extraction tableur Excel)-->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     :root{
@@ -556,12 +559,25 @@
     const maxEmission = 10000000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
+      //function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
+      function f(x) {return x;}
       function area(rad) {return Math.PI*rad**2;}
       const areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
       radius += (Math.sqrt(areaC))/Math.PI;
     }
     return radius
+  }
+
+
+  function exportToExcel(record,columns,filename){
+    const colonnes = {};
+    for (const c of columns){
+      colonnes[c] = record[c];
+    }
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, filename);
+    XLSX.writeFile(workbook,filename);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
