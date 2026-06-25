@@ -557,9 +557,9 @@
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
       function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
-      function area(rad) {Math.PI*rad**2};
-      const area = (area(maxRadius) - area(minRadius))*((f(x) - f(minEmission))/(f(maxEmission) - f(minEmission)));
-      radius += (Math.sqrt(area))/Math.PI;
+      function area(rad) {return Math.PI*rad**2;}
+      const areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
+      radius += (Math.sqrt(areaC))/Math.PI;
     }
     return radius
   }
