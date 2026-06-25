@@ -603,7 +603,7 @@
       else{
         areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
       }
-      radius += (Math.sqrt(areaC))/Math.PI;
+      radius += (Math.sqrt(areaC)/Math.PI);
     }
     return radius
   }
@@ -620,8 +620,8 @@
     XLSX.writeFile(workbook,filename);
   }
 
-  function redrawMap(record,typerMarker){
-    renderMap(record,typerMarker);
+  function redrawMap(record,typeMarker){
+    renderMap(record,typeMarker);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
