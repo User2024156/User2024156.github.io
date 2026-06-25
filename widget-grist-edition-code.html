@@ -102,13 +102,19 @@
     }
     .page-header h1{font-size:25px;font-weight:800;margin:0;}
 
-    .section-header{
-      display:flex;align-items:center;width:100%;height:60px;
-      margin-bottom:16px;padding:0 22px;color:var(--color-brand-blue);
-      background:#F6F7FF;
-      border-radius:16px;
-      position:relative;
-      margin-top:20px;
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: 60px;
+      margin-bottom: 16px;
+      padding: 0 22px;
+      color: var(--color-brand-blue);
+      background: #F6F7FF;
+      border-radius: 16px;
+      position: relative;
+      margin-top: 20px;
     }
     .section-header h1{font-size:20px;font-weight:800;margin:0;}
 
@@ -296,14 +302,13 @@
       box-shadow:var(--shadow-default);
       position:sticky;top:10px;
     }
-    #map-buttons button{
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      z-index: 10;
+    #map-buttons {
       display: flex;
-      flex-direction: row-reverse; 
-      gap: 8px; 
+      gap: 8px;
+    }
+
+    #map-buttons button {
+      z-index: 10; 
     }
     #map-header{display:flex;justify-content:space-between;align-content:flex-end;gap:12px;}
     #map-title{font-size:18px;font-weight:900;color:var(--color-brand-blue);}
@@ -333,21 +338,18 @@
     #const-button-map {
       position: absolute;
       top: 8px;
-      right: 80px;
       z-index: 10;
     }
 
     #linear-button-map {
       position: absolute;
       top: 8px;
-      right: 160px;
       z-index: 10;
     }
 
     #log-button-map {
       position: absolute;
       top: 8px;
-      right: 240px;
       z-index: 10;
     }
 
@@ -490,8 +492,8 @@
 
 
   <header class='section-header'>
+    <h1>Carte des sites concernés</h1>
     <div id="map-buttons">
-      <h1>Carte des sites concernés</h1>
       <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
       <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'constant')" id="const-button-map">Rayons constants</button>
       <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'linear')" id="linear-button-map">Relation linéaire</button>
