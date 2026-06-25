@@ -1094,8 +1094,9 @@ function renderSuggestion(records, reset, filtre_on) {
 
 
       // Zoom auto sur les points
-      const bounds = L.latLngBounds(pts.map(p => records['Region'][p.index] != 'DROM' ? [p.lat, p.lon] : [46.6, 2.4]));    // On exclut les DROM de la considération des bounds pour commencer centré sur le territoire métropolitain
-      map.fitBounds(bounds.pad(0.2));
+      const boundsHorsDrom = L.latLngBounds(pts.map(p => records['Region'][p.index] != 'DROM' ? [p.lat, p.lon] : [46.6, 2.4]));
+      const boundsDrom = L.latLngBounds(pts.map(p => [p.lat, p.lon]));  // On exclut les DROM de la considération des bounds pour commencer centré sur le territoire métropolitain
+      map.fitBounds(pts.every(p => records['Region'][p.index] == 'DROM') ? boundsDrom.pad(0.2) : boundsHorsDrom.pad(0.2));
     }
 
 
