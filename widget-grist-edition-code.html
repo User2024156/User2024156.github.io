@@ -465,9 +465,9 @@
     <h1>Carte des sites concernés</h1>
     <div id="map-buttons">
       <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
-      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'constant')" id="const-button-map">Rayons constants</button>
-      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'linear')" id="linear-button-map">Relation linéaire</button>
-      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'logarithmique')" id="log-button-map">Relation logarithmique</button>
+      <button class="btn secondary" onclick="redrawMap('constant')" id="const-button-map">Rayons constants</button>
+      <button class="btn secondary" onclick="redrawMap('linear')" id="linear-button-map">Relation linéaire</button>
+      <button class="btn secondary" onclick="redrawMap('logarithmique')" id="log-button-map">Relation logarithmique</button>
     </div>
   </header>
 
@@ -573,7 +573,7 @@
       else{
         areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
       }
-      radius += (Math.sqrt(areaC)/Math.PI);
+      radius = Math.sqrt((area(minRadius) + areaC) / Math.PI);
     }
     return radius
   }
@@ -590,8 +590,8 @@
     XLSX.writeFile(workbook,filename);
   }
 
-  function redrawMap(record,typeMarker){
-    renderMap(record,typeMarker);
+  function redrawMap(typeMarker){
+    renderMap(filtered_records_sites,TypeMarker);
   }
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
