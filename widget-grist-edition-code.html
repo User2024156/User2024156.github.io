@@ -550,6 +550,16 @@
     }
   }
 
+  function areaMarkerfromEmission(emission,maxRadius){
+    const minRadius = 4;
+    const minEmission = 10000;
+    let radius = minRadius;
+    if (typeof emission == 'number' && emission >= minEmission){
+      radius = (maxRadius - minRadius)*Math.exp(-(1/emission)) + minRadius;
+    }
+    return radius
+  }
+
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
 
 
@@ -1068,10 +1078,12 @@ function renderSuggestion(records, reset, filtre_on) {
         const cp = records['CP'][ind];
         const last_ges = records['ges_2025'][ind] != -1 ? records['ges_2025'][ind] : records['ges_2024'][ind] != -1 ? records['ges_2024'][ind] : '0 émissions ou données incomplètes';
         const filiere_css = filiere.replaceAll(' ','-').replaceAll('é','e').replaceAll('â','a');
+        const maxRadius = 15;
         let marker;
         if (p.lat != null && p.lon != null && p.lat != undefined && p.lon != undefined && p.lat != 0 && p.lon != 0){
           marker = L.circleMarker([p.lat, p.lon], {
-            radius: 7,
+            // radius: 7,
+            radius : areaMarkerfromEmission(emission,maxRadius),
             weight: 1,
             color: "#111827",
             fillColor: window.getComputedStyle(document.head).getPropertyValue('--color-' + filiere_css.toLowerCase()) || "#999",
