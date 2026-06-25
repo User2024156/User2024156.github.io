@@ -551,13 +551,13 @@
   }
 
   function areaMarkerfromEmission(emission,maxRadius){
-    const minRadius = 10;
+    const minRadius = 20;
     const minEmission = 10000;
     const maxEmission = 10000000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      const area = (Math.PI*maxRadius**2)*((emission-minEmission)/(maxEmission-minEmission));
-      radius = (Math.sqrt(area))/Math.PI;
+      const area = (Math.PI*maxRadius**2 - Math.PI*minRadius**2)*((emission-minEmission)/(maxEmission-minEmission));
+      radius += (Math.sqrt(area))/Math.PI;
     }
     return radius
   }
