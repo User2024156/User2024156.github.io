@@ -576,9 +576,11 @@
 
   function exportToExcel(columns,sheetname,filename){
     const record = filtered_records_projets;
-    const colonnes = {};
+    const colonnes = Array.from({length : record.length}, (i) => {});
     for (const c of columns){
-      colonnes[c] = record[c];
+      for (let i = 0 ; i<record.length ; i++ ){
+        colonnes[i][c] = record[c][i];
+      }  
     }
     const worksheet = XLSX.utils.json_to_sheet(colonnes);
     const workbook = XLSX.utils.book_new();
