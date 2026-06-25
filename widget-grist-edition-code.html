@@ -555,7 +555,7 @@
     const minEmission = 10000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      radius = (maxRadius - minRadius)*Math.exp(-(1/emission)) + minRadius;
+      radius += (maxRadius - minRadius)*Math.log10(emission-minEmission)/3;
     }
     return radius
   }
