@@ -321,6 +321,27 @@
       z-index: 10;
     }
 
+    #const-button-map {
+      position: absolute;
+      top: 8px;
+      right: 80px;
+      z-index: 10;
+    }
+
+    #linear-button-map {
+      position: absolute;
+      top: 8px;
+      right: 160px;
+      z-index: 10;
+    }
+
+    #log-button-map {
+      position: absolute;
+      top: 8px;
+      right: 240px;
+      z-index: 10;
+    }
+
     #suggestions {
       border: 1px solid #ccc;
       list-style: none;
@@ -463,8 +484,9 @@
     <div>
       <h1>Carte des sites concernés</h1>
       <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
-      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'constant')" id="hide-button-map">Rayons constants</button>
-      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'linear')" id="hide-button-map">Relation linéaire</button>
+      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'constant')" id="const-button-map">Rayons constants</button>
+      <button class="btn secondary" onclick="redrawMap(filtered_records_sites,'linear')" id="linear-button-map">Relation linéaire</button>
+      <button class="btn secondary" onclick="redrawMap(filtered_records_sites),'logarithmique'" id="log-button-map">Relation logarithmique</button>
     </div>
   </header>
 
