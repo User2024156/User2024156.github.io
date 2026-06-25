@@ -592,14 +592,15 @@
     const maxEmission = 10000000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      if(typeMarker=='logarithmique'){
-        function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
-      }
-      else if (typeMarker=='linear'){
-        function f(x) {return x;}
-      }
+      function f(x) {return 2**(Math.log10(x)/Math.log10(1000));}
       function area(rad) {return Math.PI*rad**2;}
-      const areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
+      let areaC ;
+      if(typeMarker=='linear'){
+        areaC = (area(maxRadius) - area(minRadius))*((emission - minEmission)/(maxEmission - minEmission));
+      }
+      else{
+        areaC = (area(maxRadius) - area(minRadius))*((f(emission) - f(minEmission))/(f(maxEmission) - f(minEmission)));
+      }
       radius += (Math.sqrt(areaC))/Math.PI;
     }
     return radius
