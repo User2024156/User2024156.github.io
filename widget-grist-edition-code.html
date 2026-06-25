@@ -551,7 +551,7 @@
   }
 
   function areaMarkerfromEmission(emission,maxRadius){
-    const minRadius = 4;
+    const minRadius = 10;
     const minEmission = 10000;
     const maxEmission = 10000000;
     let radius = minRadius;
@@ -1054,7 +1054,7 @@ function renderSuggestion(records, reset, filtre_on) {
 
       // Garder seulement ceux qui ont lat/lon valides
       const pts = [];
-      const maxRadius = 15;
+      const maxRadius = 40;
       for (let i = 0 ; i < records['id'].length ; i++) {
         const lat = Number(records['latitude'][i]);
         const lon = Number(records['longitude'][i]);
