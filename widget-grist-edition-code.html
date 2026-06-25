@@ -556,7 +556,7 @@
     const maxEmission = 10000000;
     let radius = minRadius;
     if (typeof emission == 'number' && emission >= minEmission){
-      const area = (Math.PI*maxRadius)*((emission-minEmission)/(maxEmission-minEmission));
+      const area = (Math.PI*maxRadius**2)*((emission-minEmission)/(maxEmission-minEmission));
       radius = (Math.sqrt(area))/Math.PI;
     }
     return radius
