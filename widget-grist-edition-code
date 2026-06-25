@@ -1,1 +1,1311 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cartographie des entreprises (Grist)</title>
 
+  <!-- Grist API -->
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+
+  <!-- Chart.js (Graphs) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Leaflet (carte) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root{
+      --font-primary:"Marianne",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+      --color-brand-blue:#000091;
+      --color-light-blue-bg:#F0F0FF;
+      --color-accent:#6A6AF4;
+      --color-text-default:#0b0b0b;
+      --color-text-placeholder:#6b7280;
+      --color-surface:#FFF;
+      --color-border:#A8A8A8;
+      --shadow-default:0 4px 12px rgba(0,0,145,0.18);
+
+      --color-both-pastille:#F7CA18;
+      --color-impact:#F95C5E;
+      --color-conformity:#D282CD;
+      --color-lack-data-pastille:#E2E2E2;
+      --color-aucune-habilitation-pastille:#CBCBCB;
+
+      --color-msg-lack-data:#929292;
+
+      --color-procede-electrification:#0070C0;
+      --color-procede-eaf:#203864;
+      --color-procede-ccs:#7F7F7F;
+      --color-procede-biomasse:#9DC3E6;
+      --color-procede-biogaz:#DEEBF7;
+      --color-procede-csr:#ADB9CA;
+      --color-procede-efficacite:#548235;
+      --color-procede-reduction-clinker:#70AD47;
+      --color-procede-recyclage:#A9D18E;
+      --color-procede-chgmnt-procede:#7030A0;
+      --color-procede-hydrogene:#CC66FF;
+      --color-procede-recuperation-chaleur:#E0D6A5;
+      --color-procede-anode-inerte:#000000;
+      --color-procede-intrant-decarb:#A4FF90;
+      --color-procede-report-gaz-nat:#C7835E;
+
+
+      --color-sante:#BFBFBF ;
+      --color-acier-et-fonte:#BFBFBF;
+      --color-raffinage:#330000;
+      --color-chimie:#8C2237;
+      --color-ciment:#B67E54;
+      --color-chaux:#CFA98D;
+      --color-aluminium:#BFBFBF;
+      --color-agroalimentaire:#BFA000;
+      --color-verre:#0070C0;
+      --color-autre:#ffffe6;
+      --color-autre-materiaux:#ffffe6;
+      --color-papier-carton:#ffdf80;
+      --color-platre:#ffffb3;
+      --color-secteur-non-industriel:#ffffe6;
+      --color-energie:#000099;
+
+
+      --color-background-certain:#b6b63e;
+      --color-background-potentiel:#b6983e;
+      --color-background-a-risque:#b65c3e;
+      --color-background-abandonne:	#b63e3e;
+      --color-background-mis-en-service:#98b63e;
+
+      
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:var(--font-primary);
+      background:var(--color-surface);
+      color:var(--color-text-default);
+      font-size:13px;
+    }
+
+    .page-wrapper{display:flex;justify-content:center;padding:24px;}
+    .main-content{width:100%;max-width:1200px;}
+
+    .page-header{
+      display:flex;align-items:center;width:100%;height:120px;
+      margin-bottom:16px;padding:0 22px;color:var(--color-brand-blue);
+      background:#F6F7FF;
+      border-radius:16px;
+    }
+    .page-header h1{font-size:25px;font-weight:800;margin:0;}
+
+    .section-header{
+      display:flex;align-items:center;width:100%;height:60px;
+      margin-bottom:16px;padding:0 22px;color:var(--color-brand-blue);
+      background:#F6F7FF;
+      border-radius:16px;
+      position:relative;
+      margin-top:20px;
+    }
+    .section-header h1{font-size:20px;font-weight:800;margin:0;}
+
+    .update-indicator{display:flex;align-items:center;gap:10px;margin:8px 0 18px;}
+    .update-indicator__text{font-size:13px;color:var(--color-brand-blue);font-weight:700;}
+    .update-indicator__text time{font-weight:800;color:var(--color-brand-blue);}
+
+    .page-description{margin-bottom:18px;}
+    .page-description p{margin-bottom:6px;line-height:1.35;}
+    .page-description ul{margin:8px 0 0;padding-left:18px;}
+    .page-description li{margin:4px 0;}
+
+    /* Filters */
+    .filters-panel{display:flex;flex-direction:column;gap:14px;margin-bottom:14px;}
+    .filters-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+    .form-group{display:flex;flex-direction:column;gap:8px;font-size:13px;min-width:220px;}
+    .form-group--grow{flex:1;min-width:300px;}
+    .form-control{
+      height:34px;padding:0 14px;border-radius:999px;
+      border:1px solid rgba(0,0,0,0.15);
+      background:#fff;box-shadow:var(--shadow-default);
+      font-size:14px;outline:none;
+    }
+    select.form-control{cursor:pointer;}
+    .form-control::placeholder{color:var(--color-text-placeholder);}
+    .btn{
+      height:34px;padding:0 16px;border-radius:999px;border:none;
+      cursor:pointer;font-weight:700;box-shadow:var(--shadow-default);
+      background:var(--color-brand-blue);color:#fff;
+    }
+    .btn.secondary{
+      background:#fff;color:var(--color-brand-blue);
+      border:1px solid rgba(0,0,0,0.15);
+    }
+    .hint{color:#6b7280;font-size:12px;margin-top:2px;}
+
+    	/* Dashboard */
+.dashboard{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin:14px 0 18px;
+}
+.dash-card{
+  flex:1;
+  min-width:240px;
+  padding:14px 16px;
+  border:1px solid #E7E9FF;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:var(--shadow-default);
+}
+.dash-card--wide{flex:2;min-width:320px;}
+.dash-k{
+  font-size:12px;
+  color:var(--color-brand-blue);
+  font-weight:900;
+  margin-bottom:6px;
+}
+.dash-v{
+  font-size:22px;
+  font-weight:900;
+  color:#111827;
+  line-height:1.1;
+}
+.dash-sub{margin-top:6px;color:#6b7280;font-size:12px;}
+
+.blocage-breakdown{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.blocage-row{
+  display:grid;
+  grid-template-columns: 1.2fr 2fr auto;
+  gap:10px;
+  align-items:center;
+}
+.blocage-label{
+  font-weight:700;
+  color:#111827;
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.blocage-bar{
+  height:10px;
+  border-radius:999px;
+  background:#E5E7EB;
+  overflow:hidden;
+}
+.blocage-bar > span{
+  display:block;
+  height:100%;
+  background:var(--color-accent);
+  border-radius:999px;
+}
+.blocage-pct{
+  font-variant-numeric:tabular-nums;
+  color:#374151;
+  font-size:12px;
+  font-weight:800;
+}
+.blocage-empty{color:#6b7280;font-size:12px;margin-top:6px;}
+
+.chart-wrapper{
+  position: relative;
+  margin-bottom: 40px;
+}
+
+#hide-button-charts {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  z-index: 10;
+}
+
+.canvas-charts-1-hidden {
+  display: none !important;
+}
+
+.canvas-charts-1-shown {
+  display: flex;
+  width: 100%;
+  height: 600px;
+  gap: 30px;
+}
+
+.pie-chart {
+  flex: 1;
+  position: relative;
+}
+
+.bar-chart-annees {
+  flex: 3;
+  position: relative;
+}
+
+  /* Résultats */
+    .results-section{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;}
+    .company-list-container{flex:1;min-width:320px;}
+    #map-container{flex:1;min-width:320px;}
+
+
+
+		
+
+
+
+    /* Accordéon */
+    #company-accordion{display:flex;flex-direction:column;gap:12px;}
+    .company-item{
+      border:1px solid #E7E9FF;border-radius:16px;overflow:hidden;background:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,0.05);
+    }
+    .company-item__header{
+      display:flex;align-items:center;gap:10px;padding:14px 16px;
+      cursor:pointer;user-select:none;
+    }
+    .company-item__name{font-size:16px;font-weight:800;color:var(--color-brand-blue);}
+    .company-item__meta{margin-left:auto;color:rgba(22, 21, 19, 0.99);font-size:12px;}
+    .company-item__details{display:none;padding:14px 16px;background:var(--color-light-blue-bg);}
+    .company-item.is-open .company-item__details{display:block;}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .detail{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:#fff;border-radius:12px;}
+    .detail .k{color:#6b7280;}
+    .detail .v{font-weight:700;color:#111827;text-align:right;}
+    .detail.full{grid-column:1 / -1;}
+
+    /* Plan Carte */
+
+
+    .map-wrapper{
+      position:relative;
+    }
+
+    .map-container-shown{
+
+    }
+    .map-container-hidden{
+      display:none !important;
+    }
+
+    #map-container{
+      display:flex;flex-direction:column;gap:10px;
+      padding:14px;
+      border:1px solid #E7E9FF;border-radius:16px;background:#fff;
+      box-shadow:var(--shadow-default);
+      position:sticky;top:10px;
+    }
+    #map-header{display:flex;justify-content:space-between;align-content:flex-end;gap:12px;}
+    #map-title{font-size:18px;font-weight:900;color:var(--color-brand-blue);}
+    #map-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#374151;}
+    .legend-item{display:flex;align-items:center;gap:8px;}
+    .legend-swatch{width:14px;height:10px;border-radius:999px;}
+    .sw-both{background:var(--color-both-pastille);}
+    .sw-impact{background:var(--color-impact);}
+    .sw-conf{background:var(--color-conformity);}
+    .sw-none{background:var(--color-aucune-habilitation-pastille);}
+    .sw-nodata{background:var(--color-lack-data-pastille);}
+
+    #leaflet-map{width:100%;height:420px;border-radius:14px;overflow:hidden;border:1px solid #E7E9FF;}
+
+    .empty{
+      padding:14px;border-radius:14px;border:1px dashed #C7CBFF;background:#FBFBFF;
+      color:#6b7280;
+    }
+
+    #hide-button-map {
+      position: absolute;
+      top: 10px;
+      right: 8px;
+      z-index: 10;
+    }
+
+    #suggestions {
+      border: 1px solid #ccc;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #suggestions li {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    #suggestions li:hover {
+      background: #f0f0f0;
+    }
+
+    
+  </style>
+
+</head>
+
+<body>
+  <div class="page-wrapper">
+    <main class="main-content">
+
+      <header class="page-header">
+        <h1>Vue globale des bases de données Projets et Aides</h1>
+      </header>
+
+      <div class="update-indicator">
+        <p class="update-indicator__text">
+          Dernière mise à jour : <time id="update-date">—</time>
+        </p>
+      </div>
+
+      <div class="page-description">
+        <p>
+        <ul>
+          <li>Filtrez par <strong>Région</strong>, <strong>ZIBaC</strong>, <strong>Périmètre</strong> (50 sites/top 140+)...</li>
+          <li>Recherche par nom de site</li>
+          <li>Carte intéractive (Leaflet / OpenStreetMap)</li>
+        </ul>
+      </div>
+
+<!-- Choix des filtres pour la vue des données affichées -->
+
+  <section class="filters-panel">
+    <div class="filters-row">
+      <div class="form-group">
+        <label for="selectRegion">Région</label>
+        <select class="form-control" id="selectRegion">
+          <option value="">Toutes</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="selectZIBaC">ZIBaC</label>
+        <select class="form-control" id="selectZIBaC">
+          <option value="">Toutes</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="selectPerimetre">Périmètre</label>
+        <select class="form-control" id="selectPerimetre">
+          <option value="">50 sites, top 140+...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="selectFiliere">Filière</label>
+        <select class="form-control" id="selectFiliere">
+          <option value="">Toutes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="selectLevier">Levier de décarbonation</label>
+      <select class="form-control" id="selectLevier">
+        <option value="">Tous</option>
+      </select>
+    </div>
+
+    <div class="filters-row">
+      <div class="form-group form-group--grow">
+        <label for="search-by-name">Nom du site</label>
+        <input class="form-control" id="search-by-name" type="text"
+               placeholder="Rechercher le nom d’un site..." />
+        <ul id="suggestions"></ul> 
+        <div class="hint">Astuce : tapez 3+ caractères pour filtrer rapidement.</div>
+      </div>
+
+      <div class="form-group">
+        <button class="btn" type="button" id="btnSearch">Rechercher</button>
+      </div>
+
+      <div class="form-group">
+        <button class="btn secondary" type="button" id="btnClear">Effacer la sélection</button>
+      </div>
+    </div>
+  </section>
+
+
+<!-- Résultats de la recherche par Nom de Site -->
+
+  <section class="results-section">
+    <div class="company-list-container">
+      <div id="company-accordion"></div>
+      <div id="empty-left" class="empty" style="display:none;"></div>
+    </div>
+  </section>
+
+  
+
+<!-- Graph des émissions abattues par procédé par années et du potentiel d'abattement selon l'état d'avancement des projets -->
+
+    <header class='section-header'>
+      <div>
+        <h1>Emissions abattues </h1>
+        <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button>
+      </div>
+    </header>
+
+
+    <div class="chart-wrapper">
+      <div id='canvas-charts-1' class='canvas-charts-1-shown'>
+        <div class='pie-chart'>
+          <canvas id="pieChartCO2parEtat"></canvas>
+        </div>
+        <div class='bar-chart-annees'>
+          <canvas id="barChartCO2parAnnee"></canvas>
+        </div>
+      </div>
+    </div>
+
+
+
+  <header class='section-header'>
+    <div>
+      <h1>Carte des sites concernés</h1>
+      <button class='btn secondary' onclick="hideShowButtons('map-container')" id="hide-button-map">Cacher</button>
+    </div>
+  </header>
+
+
+  <section>
+    <div class="map-wrapper">
+      <div id="map-container" class="map-container-shown">
+        <div id="map-header">
+          <div id="map-legend">
+            <div class="legend-item"></div>
+          </div>
+        </div>
+        <div id="leaflet-map"></div>
+        <div id="empty-map" class="empty" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+<script type="text/javascript">
+
+  /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
+
+  grist.ready({ requiredAccess: 'full' });
+
+  const annees_etudiees = Array.from({ length: 17 }, (_, i) => 2024 + i);
+
+  let records_projets;
+  let records_aides;
+  let records_sites;
+  let filtered_records_projets;
+  let filtered_records_aides;
+  let filtered_records_sites;
+
+  const dashedBorderPlugin = {                                                                      // Plugin pour pouvoir afficher des barres en pointillés
+    id: 'dashedBorder',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        if (!dataset.dashed) return;  // on cible uniquement les datasets marqués
+        if (dataset.hidden) return;
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (meta.hidden) return;  // masqué via meta 
+        meta.data.forEach(bar => {
+          if (!bar.active && bar.hidden) return;  // barre individuellement masquée
+          const props = bar.getProps(['x', 'y', 'width', 'base'], true);
+          const { x, width } = props;
+          const top = Math.min(props.y, props.base);
+          const bottom = Math.max(props.y, props.base);
+          const height = bottom - top;
+          if (height === 0) return;
+          ctx.save();
+          ctx.setLineDash([4, 3]);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = dataset.borderColor;
+          ctx.strokeRect(x - width / 2, top, width, height);
+          ctx.restore();
+        });
+      });
+    }
+  };
+
+  function normStr(x) {
+    return (x ?? "").toString().trim();
+  }
+
+  function htmlEscape(s) {
+    return normStr(s)
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+
+  function hideShowButtons(idCible) {
+    const divCible = document.getElementById(idCible);
+    let btn;
+    if (divCible.className.includes('map')){
+      btn = document.getElementById('hide-button-map');
+    }
+    else if(divCible.className.includes('chart')){
+      btn = document.getElementById('hide-button-charts');
+    }
+    if (divCible.className === `${idCible}-shown`) {
+      divCible.className = `${idCible}-hidden`;
+      btn.textContent = 'Afficher';
+    } 
+    else {
+      divCible.className = `${idCible}-shown`;
+      btn.textContent = 'Cacher';
+    }
+  }
+
+  /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
+
+
+  /* TRAITEMENT ET CALCUL SUR LES DONNEES */
+
+  function D_CO2_procede_annee(record) {                     // Renvoie un dictionnaire du type : D { (année,procédé) : CO2 abattu en MtCO2e/an }
+
+    const D = {};
+    const donnees_traitees = traitement_donnees_CO2_procede(record);
+    const anneesMES = donnees_traitees[2];
+    const procede = donnees_traitees[0];
+    const co2_abattu = donnees_traitees[1];
+
+    for (let i = 0; i < anneesMES.length; i++) {
+      const annee = anneesMES[i];
+      let cleAnnee;
+      if (2036 <= annee && annee <= 2040) {
+        cleAnnee = 2038;
+      } 
+      else if (2041 <= annee && annee <= 2045) {
+        cleAnnee = 2043;
+      } 
+      else if (2046 <= annee && annee <= 2050) {
+        cleAnnee = 2048;
+        } 
+      else if (annee < 2019){}
+      else{
+        cleAnnee = annee;
+      }
+      if (cleAnnee != undefined){
+        const cle = `${cleAnnee}|${procede[i]}`;                // cle String obtenues via la méthode .split()
+        D[cle] = (D[cle] ?? 0) + co2_abattu[i];                 // D [cle] ?? 0 initialise la clé à 0 si elle est de type undefined et ne fais rien sinon
+      }
+    }                                 
+    return D;
+  }
+
+
+  function traitement_donnees_CO2_procede(record) {                      // On s'affranchit des procédés non indiqués ou sans le bon format
+    procede_non_traite = record.Procede || [];
+    CO2_non_traite = record.Emissions_abattues_tCO2e_an_ || [];
+    annee_non_traite = record.Annee_MES_prevue || [];
+    etat_proj_non_traite = record.Probabilite_de_mise_en_service_MES_ || [];
+    procede_traite = [];
+    CO2_traite = [];
+    annee_traite = [];
+    etat_proj_traite = [];
+    index = 0;
+    for (let i = 0 ; i < procede_non_traite.length ; i++){
+      if (procede_non_traite[i] == null || procede_non_traite[i] == '0' || procede_non_traite[i] == '-1' || annee_non_traite[i] == 0 || typeof annee_non_traite[i] != 'number' || etat_proj_non_traite[i] == 'Abandonné') {}
+      else if (procede_non_traite[i].includes('Hydrogène')){
+        procede_traite[index] = 'Hydrogène';
+        CO2_traite[index] = CO2_non_traite[i];
+        annee_traite[index] = annee_non_traite[i];
+        etat_proj_traite[index] = etat_proj_non_traite[i];
+        index += 1;
+      }
+      else if (procede_non_traite[i].includes('Biogaz')){
+        procede_traite[index] = 'Biogaz';
+        CO2_traite[index] = CO2_non_traite[i];
+        annee_traite[index] = annee_non_traite[i];
+        etat_proj_traite[index] = etat_proj_non_traite[i];
+        index += 1;
+      }
+      else if (procede_non_traite[i].includes('CCS')){
+        procede_traite[index] = 'CCS';
+        CO2_traite[index] = CO2_non_traite[i];
+        annee_traite[index] = annee_non_traite[i];
+        etat_proj_traite[index] = etat_proj_non_traite[i];
+        index += 1;
+      }
+      else if (procede_non_traite[i].includes('Autre')){
+        procede_traite[index] = 'Autre changement de procédé';
+        CO2_traite[index] = CO2_non_traite[i];
+        annee_traite[index] = annee_non_traite[i];
+        etat_proj_traite[index] = etat_proj_non_traite[i];
+        index += 1;
+      }
+      else{
+        CO2_traite[index] = CO2_non_traite[i];
+        annee_traite[index] = annee_non_traite[i];
+        procede_traite[index] = procede_non_traite[i];
+        etat_proj_traite[index] = etat_proj_non_traite[i];
+        index += 1;
+      }
+    }
+    return [procede_traite,CO2_traite,annee_traite,etat_proj_traite];
+  }
+
+  function D_sum_CO2_etat_projet(record){
+    CO2_par_etat = {};            
+    etat_par_projet = record.Probabilite_de_mise_en_service_MES_ || [];
+    CO2_par_projet = record.Emissions_abattues_tCO2e_an_ || [];
+    for (let i = 0; i < CO2_par_projet.length; i++){
+      if (etat_par_projet[i] == 'Mis en service' && typeof CO2_par_projet[i] == "number"){
+        CO2_par_etat[etat_par_projet[i]] = (CO2_par_etat[etat_par_projet[i]] ?? 0) + CO2_par_projet[i];
+      }
+      else if((etat_par_projet[i] == 'Potentiel' || etat_par_projet[i] == '') && typeof CO2_par_projet[i] == "number"){
+        CO2_par_etat['Potentiel'] = (CO2_par_etat['Potentiel'] ?? 0) + CO2_par_projet[i];
+      }
+      else if(etat_par_projet[i] == 'Certain' && typeof CO2_par_projet[i] == "number"){
+        CO2_par_etat[etat_par_projet[i]] = (CO2_par_etat[etat_par_projet[i]] ?? 0) + CO2_par_projet[i];
+      }
+      else if(etat_par_projet[i] == 'A risque' && typeof CO2_par_projet[i] == "number"){
+        CO2_par_etat[etat_par_projet[i]] = (CO2_par_etat[etat_par_projet[i]] ?? 0) + CO2_par_projet[i];
+      }
+      else{
+        if (typeof CO2_par_projet[i] == "number"){
+          CO2_par_etat[etat_par_projet[i]] = (CO2_par_etat[etat_par_projet[i]] ?? 0) + CO2_par_projet[i];
+        }
+      }
+    }
+    return CO2_par_etat;
+  }
+
+    /* TRAITEMENT ET CALCUL SUR LES DONNEES */
+
+
+
+    /* CONSTRUCTION DES GRAPHIQUES */
+
+  let chartCO2Procede = null;
+  let chartCO2Etat = null;
+
+  let map;
+  let markersLayer;
+
+  function graphique_CO2_procede_annee(record) {             // Trace le graphique à partir du dictionnaire construit par la fonction D_CO2_procede_annee
+
+    const dict_donnees = D_CO2_procede_annee(record);
+    const cles = Object.keys(dict_donnees);
+    const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
+    const btn = document.getElementById('hide-button-charts');
+    let doc = document.getElementById('canvas-charts-1');
+    if (!cles.length) {
+      doc.className = 'canvas-charts-1-hidden';
+      btn.style.display = 'none';
+      return;
+    }
+    doc.className = 'canvas-charts-1-shown';
+    btn.style.display = 'block';
+    btn.textContent = 'Cacher';
+    const ctx = document.getElementById('barChartCO2parAnnee').getContext('2d');
+    let list_labels = list_annees.slice();                // On construit les labels à partir des intervalles de temps considérés
+    list_labels[list_labels.length-1] = '2046-2050';
+    list_annees[list_annees.length-1] = 2048;
+    list_labels[list_labels.length-2] = '2041-2045';
+    list_annees[list_annees.length-2] = 2043;
+    list_labels[list_labels.length-3] = '2036-2040';
+    list_annees[list_annees.length-3] = 2038;
+    const list_procede = [...new Set(cles.map(k => k.split('|')[1]))];
+    let backgroundColors = Array.from({ length: list_procede.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
+    let borderColors = Array.from({ length: list_procede.length }, (_, i) => 'rgba(0,0,0,0)');
+    let dashedBorders = Array.from({ length: list_procede.length }, (_,i) => false);
+    let bases = Array.from({ length: list_procede.length }, (_,i) => null);
+    let datas = list_procede.map(p => list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0));    
+    for (let i = 0 ; i < list_procede.length ; i++){
+      if (list_procede[i] == 'Hydrogène'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-hydrogene');
+      }
+      else if (list_procede[i] == 'Variation de production sans décarbonation'){
+        backgroundColors[i] = 'transparent';
+        borderColors[i] = '#000000';
+        dashedBorders[i] = true;
+        bases[i] = 0;
+      }
+      else if (list_procede[i] == 'CCS'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-ccs');
+      }
+      else if (list_procede[i] == 'Biogaz'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-biogaz');
+      }
+      else if (list_procede[i] == 'Chaleur biomasse'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-biomasse');
+      }
+      else if (list_procede[i] == 'EAF (DRI/Scrap)'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-eaf');
+      }
+      else if (list_procede[i] == 'CSR'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-csr');
+      }
+      else if (list_procede[i] == 'Recyclage (incl. calcin)'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-recyclage');
+      }
+      else if (list_procede[i] == 'Efficacité énergétique'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-efficacite');
+      }
+      else if (list_procede[i] == 'Réduction du taux de clinker'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-reduction-clinker');
+      }
+      else if (list_procede[i] == 'Electrification'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-electrification');
+      }
+      else if (list_procede[i] == 'Report sur le gaz naturel'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-report-gaz-nat');
+      }
+      else if (list_procede[i] == 'Intrant matière décarbonnée (incl. Biochar)'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-intrant-decarb');
+      }
+      else if (list_procede[i] == 'Anode inerte'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-anode-inerte');
+      }
+      else if (list_procede[i] == 'Récupération de chaleur'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-recuperation-chaleur');
+      }
+      else if (list_procede[i] == 'Autre changement de procédé'){
+        backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-chgmnt-procede');
+      }
+      else{
+        backgroundColors[i] = 'rgba(0,0,0,0)';
+        borderColors[i] = 'rgba(1,1,1,1)';
+      }
+    }
+    const datasets = list_procede.map((p,i) => ({
+      label: p,
+      data: list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0),
+      backgroundColor : backgroundColors[i % backgroundColors.length],
+      borderColor : borderColors[i],
+      dashed: dashedBorders[i],
+      // base:bases[i],
+      stack: 'stack1',
+      skipNull:true,
+    }))
+
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: list_labels,
+            datasets: datasets
+        },
+        plugins: [dashedBorderPlugin],
+        options: {
+          borderWidth:0,
+          skippedBorders:true,
+          interaction: {
+            mode: 'x',
+          },
+          plugins: {
+            legend:{
+              position:'bottom'
+            },
+            title: {
+              color:window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
+              font: {size:15, family:window.getComputedStyle(document.head).getPropertyValue('--font-primary'),weight:900},
+              align: 'center',
+              display: true,
+              text: 'Déploiement des projets (abandonnés exclus), MtCO2e/an, 2019-2050',
+            },
+            tooltip: {
+              mode:'point',
+              displayColors: true,
+              padding:'15',
+              titleFont: {size: 15, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary'), weight:'bold'},
+              bodyFont: {size: 15, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary')},
+              titleColor: window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
+              backgroundColor: '#F6F7FF',
+              callbacks: {
+                labelTextColor: function(context){
+                  return 'rgba(0,0,0,1)';
+                },
+                title: function(context) {
+                  const anneeMES = context[0].label;
+                  return `Prévisionnel des émissions abattues par procédés en ${anneeMES.toLowerCase()} (en kt CO2e)`;
+                },
+                label: function(context) {
+                  const value = context.raw; // Raw data value (e.g., 1200)
+                  const labels = context.dataset.label;
+                  const formatedValue = Math.floor(value/1000);
+                  return `${labels} : ${formatedValue} kt CO2e`; // Custom label
+                },
+              }
+            },
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: {
+                display: false,
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: false,
+              type: 'linear',
+            }
+          },
+          maintainAspectRatio: false 
+        }
+    });
+    return chart;
+  }
+  
+
+
+
+  function graphique_CO2_etat_projet(record){
+    const CO2_par_etat = D_sum_CO2_etat_projet(record);
+    const data = Object.values(CO2_par_etat);
+    const labels = Object.keys(CO2_par_etat);
+    if (!labels.length) return;
+    const ctx = document.getElementById('pieChartCO2parEtat');
+    const chart = new Chart(ctx, {
+    type : 'doughnut',
+    data : {
+      datasets: [ {
+        data: data,
+        backgroundColor: [... new Set(labels.map(l => window.getComputedStyle(document.head).getPropertyValue(`--color-background-${l.replaceAll(' ','-').replaceAll('é','e').toLowerCase()}`)))],
+        borderColor : Array.from({ length: labels.length }, (_, i) => 'rgba(0,0,0,1)')
+      }],
+      labels: labels,
+    },
+    options : {
+      cutout: '60%',
+      plugins: {
+          legend:{
+            position:'bottom'
+          },
+          title: {
+            color:window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
+            font: {size:15, family:window.getComputedStyle(document.head).getPropertyValue('--font-primary'),weight:900},
+            align: 'start',
+            display: true,
+            text: 'Part des émissions abattues par état des projets',
+          },
+          tooltip: {
+            displayColors: true,
+            padding:{
+              left:5,
+              right:5,
+              top:15,
+              bottom:15,
+            },
+            titleFont: {size: 12, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary'), weight:'bold'},
+            bodyFont: {size: 12, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary')},
+            titleColor: window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
+            backgroundColor: '#F6F7FF',
+            callbacks: {
+              labelTextColor: function(context){
+                return 'rgba(0,0,0,1)';
+              },
+              title: function(context) {
+                const etatProj = context[0].label;
+                return `Emissions abattues par les projets ${etatProj.toLowerCase()}s`;
+              },
+              label: function(context) {
+                const value = context.raw; // Raw data value (e.g., 1200)
+                const formatedValue = Math.floor(value/1000);
+                return ` ${formatedValue} kt CO2e`; // Custom label
+              },
+            }
+          },
+        },
+      radius: '90%',
+      maintainAspectRatio: false,
+      borderAlign : 'inner',
+      borderWidth : 0.5
+    }
+  });
+  return chart;
+}
+
+
+function renderList(records,hide) {
+      const acc = document.getElementById("company-accordion");
+      const emptyLeft = document.getElementById("empty-left");
+      acc.innerHTML = "";
+      emptyLeft.style.display = "none";
+
+      if (!records['name_site'].length || hide == true) {
+        emptyLeft.textContent = "Aucun résultat avec cette recherche.";
+        emptyLeft.style.display = "block";
+        return;
+      }
+
+      for (let i=0 ; i < records['name_site'].length ; i++) {
+        const name = records['name_site'][i] || "(Sans nom)";
+        const region = records['Region'][i];
+        const filiere = records['Filiere'][i];
+        const commune = records['commune'][i];
+        const cp = records['CP'][i];
+        const last_ges = records['ges_2025'][i] != -1 ? records['ges_2025'][i] : records['ges_2024'][i] != -1 ? records['ges_2024'][i] : '0 émissions ou données incomplètes';
+        const entreprise = records['entreprise'][i];
+        const perimetre = records['Perimetre'][i];
+        const zibac = records['ZIBaC'][i];
+
+        const item = document.createElement("div");
+        item.className = "company-item";
+
+        const header = document.createElement("div");
+        header.className = "company-item__header";
+        header.innerHTML = `
+          <div class="company-item__name">${htmlEscape(name)}</div>
+          <div class="company-item__meta">${htmlEscape([region, commune].filter(Boolean).join(" · "))}</div>
+        `;
+
+        const details = document.createElement("div");
+        details.className = "company-item__details";
+        details.innerHTML = `
+          <div class="detail-grid">
+            <div class="detail"><span class="k">Région</span><span class="v">${htmlEscape(region || "—")}</span></div>
+            <div class="detail"><span class="k">Entreprise</span><span class="v">${htmlEscape(entreprise || "—")}</span></div>
+            <div class="detail"><span class="k">Périmètre</span><span class="v">${htmlEscape(perimetre || "—")}</span></div>
+            <div class="detail"><span class="k">ZIBaC</span><span class="v">${htmlEscape(zibac || "—")}</span></div>
+            <div class="detail"><span class="k">Emissions GES 2025</span><span class="v">${htmlEscape(last_ges || "—")}</span><span class="k">${last_ges == null || typeof last_ges == 'string' ? '' : ' tCO2'}</span></div>
+            <div class="detail full"><span class="k">Adresse</span><span class="v">${htmlEscape([cp, commune].filter(Boolean).join(" ") || "—")}</span></div>
+          </div>
+        `;
+
+        header.addEventListener("click", () => item.classList.toggle("is-open"));
+
+        item.appendChild(header);
+        item.appendChild(details);
+        acc.appendChild(item);
+      }
+    }
+
+let suggestionAbortController = null;
+
+function renderSuggestion(records, reset, filtre_on) {
+  const data = records["name_site"] ?? [];
+  const list = document.getElementById("suggestions");
+  const input = document.getElementById("search-by-name");
+
+  // Supprime les anciens listeners de suggestion sans toucher à l'input
+  if (suggestionAbortController) suggestionAbortController.abort();
+  suggestionAbortController = new AbortController();
+  const signal = suggestionAbortController.signal;
+
+  list.innerHTML = "";
+  if (reset === true) return;
+
+  function buildList() {
+    const val = input.value.trim().toLowerCase();
+    list.innerHTML = "";
+    if (val.length < 3 && filtre_on === false) return;
+
+    const matches = data.filter(item =>
+      typeof item === "string" && item.toLowerCase().includes(val)
+    );
+
+    matches.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      li.addEventListener("click", () => {
+        input.value = item;
+        list.innerHTML = "";
+        applyFilters();
+      }, { signal });
+      list.appendChild(li);
+    });
+  }
+  
+  // Réaffiche à chaque frappe
+  input.addEventListener("input", buildList, { signal });
+
+  // Réaffiche si on reclique sur l'input non vide
+  input.addEventListener("click", buildList, { signal });
+
+  // Ferme si clic ailleurs
+  document.addEventListener("click", e => {
+    if (e.target !== input) list.innerHTML = "";
+  }, { signal });
+
+  // Affiche immédiatement si la valeur est déjà >= 3 chars
+  buildList();
+}
+
+
+    // CARTE :
+
+  function ensureMap() {
+    if (map) return;
+
+    map = L.map("leaflet-map", { zoomControl: true }).setView([46.6, 2.4], 6);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+
+    markersLayer = L.layerGroup().addTo(map);
+  }
+
+  function renderMap(records) {
+      ensureMap();
+
+      const emptyMap = document.getElementById("empty-map");
+      emptyMap.style.display = "none";
+
+      markersLayer.clearLayers();
+
+      // Garder seulement ceux qui ont lat/lon valides
+      const pts = [];
+      for (let i = 0 ; i < records['id'].length ; i++) {
+        const lat = Number(records['latitude'][i]);
+        const lon = Number(records['longitude'][i]);
+        const index = i;
+        if (Number.isFinite(lat) && Number.isFinite(lon) && (lat != 0 && lon != 0)) pts.push({ index, lat, lon });
+      }
+      if (pts.length == 1){
+        console.log(pts);
+      }
+      console.log(pts.length);
+      if (!pts.length) {
+        emptyMap.textContent = "Aucun point géolocalisé (Latitude/Longitude manquantes) pour cette sélection.";
+        emptyMap.style.display = "block";
+        map.setView([46.6, 2.4], 6);
+        return;
+      }
+
+      for (const p of pts) {
+        const ind = p.index;
+        const name = records['name_site'][ind] || "(Sans nom)";
+        const region = records['Region'][ind];
+        const filiere = records['Filiere'][ind];
+        const ville = records['commune'][ind];
+        const cp = records['CP'][ind];
+        const last_ges = records['ges_2025'][ind] != -1 ? records['ges_2025'][ind] : records['ges_2024'][ind] != -1 ? records['ges_2024'][ind] : '0 émissions ou données incomplètes';
+        const filiere_css = filiere.replaceAll(' ','-').replaceAll('é','e').replaceAll('â','a');
+        let marker;
+        if (p.lat != null && p.lon != null && p.lat != undefined && p.lon != undefined && p.lat != 0 && p.lon != 0){
+          marker = L.circleMarker([p.lat, p.lon], {
+            radius: 7,
+            weight: 1,
+            color: "#111827",
+            fillColor: window.getComputedStyle(document.head).getPropertyValue('--color-' + filiere_css.toLowerCase()) || "#999",
+            fillOpacity: 0.9
+          });
+  
+          marker.bindPopup(`
+            <div style="font-family:${getComputedStyle(document.body).fontFamily};">
+              <div style="font-weight:900;color:#000091;margin-bottom:4px;">${htmlEscape(name)}</div>
+              <div><b>Région :</b> ${htmlEscape(region || "—")}</div>
+              <div><b>Filière :</b> ${htmlEscape(filiere || "—")}</div>
+              <div><b>Adresse :</b> ${htmlEscape([cp, ville].filter(Boolean).join(" ") || "—")}</div>
+              <div><b>Emissions :</b> ${htmlEscape(last_ges || "—")}<b>${last_ges == null || typeof last_ges == 'string' ? '' : ' tCO2'}</b></div>
+            </div>
+          `);
+
+          marker.addTo(markersLayer);
+        }
+      }
+
+
+      // Zoom auto sur les points
+      const bounds = L.latLngBounds(pts.map(p => records['Region'][p.index] != 'DROM' ? [p.lat, p.lon] : [46.6, 2.4]));    // On exclut les DROM de la considération des bounds pour commencer centré sur le territoire métropolitain
+      map.fitBounds(bounds.pad(0.2));
+    }
+
+
+function majGraphiques() {
+  if (chartCO2Procede) chartCO2Procede.destroy();
+  if (chartCO2Etat) chartCO2Etat.destroy();
+  chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets);
+  chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
+  renderMap(filtered_records_sites);
+}
+
+  /* CONSTRUCTION DES GRAPHIQUES */
+
+
+  /* FILTRES */
+
+  function getFilters() {
+    return{
+      region : document.getElementById("selectRegion").value,
+      zibac : document.getElementById("selectZIBaC").value,
+      perimetre : document.getElementById("selectPerimetre").value,
+      filiere : document.getElementById("selectFiliere").value,
+      levier : document.getElementById("selectLevier").value,
+      search : document.getElementById("search-by-name").value
+    };
+  }
+
+  function filterTable(record, type_filtre, valeur_filtre){
+    let list_id = record.id;
+    let filtered_record = {};                        
+    for (const c of Object.keys(record)) {
+      filtered_record[c] = [];                    
+    }
+    for (let r = 0 ; r<list_id.length ; r++){             // r = rows ; c = columns
+      if(record[type_filtre][r] === valeur_filtre || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
+        for(const c of Object.keys(record)){
+          filtered_record[c].push(record[c][r]);
+        }
+      }
+    }
+    return filtered_record;
+  }
+
+  function deepCopyRecord(record){
+    const copy = {};
+    for (const key of Object.keys(record)) {
+      copy[key] = [...record[key]]; // copie de chaque tableau
+    }
+    return copy;
+  }
+
+  function applyFilters() {
+    const filters = getFilters();
+    filtered_records_projets = deepCopyRecord(records_projets);
+    filtered_records_aides = deepCopyRecord(records_aides);
+    filtered_records_sites = deepCopyRecord(records_sites)
+    if (filters.region){
+      filtered_records_projets = filterTable(filtered_records_projets, 'Region', filters.region);
+      filtered_records_aides = filterTable(filtered_records_aides, 'Region', filters.region);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Region', filters.region);
+      renderSuggestion(filtered_records_sites,false,true);
+    }
+    if (filters.zibac) {
+      filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', filters.zibac);
+      filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', filters.zibac);
+      filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', filters.zibac);
+      renderSuggestion(filtered_records_sites,false,true);
+    }
+    if (filters.filiere){
+      filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filters.filiere);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filters.filiere);
+      renderSuggestion(filtered_records_sites,false,true);
+    }
+    if (filters.perimetre) {
+      filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
+    } 
+    if (filters.levier) {
+      filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
+    }
+    if (filters.search.length >= 3) {
+      filtered_records_projets = filterTable(filtered_records_projets, 'Nom_du_site', filters.search);
+      filtered_records_aides = filterTable(filtered_records_aides, 'Nom_du_site', filters.search);
+      filtered_records_sites = filterTable(filtered_records_sites, 'name_site', filters.search);
+      renderList(filtered_records_sites,false);
+      renderSuggestion(filtered_records_sites,false,false);
+    }
+    if (filters.search.length < 3){
+      renderList(filtered_records_sites,true,false);
+    }
+    majGraphiques(); 
+  }
+
+  function fillFilterOptionsFromData() {
+    const selRegion = document.getElementById("selectRegion");
+    const selZIBaC = document.getElementById("selectZIBaC");
+    const selFiliere = document.getElementById("selectFiliere");
+    const selPerimetre = document.getElementById("selectPerimetre");
+    const selLevier = document.getElementById("selectLevier");
+
+    setSelectOptions(selRegion, choixColUniques(records_projets,"Region"), "Toutes");
+    setSelectOptions(selZIBaC, choixColUniques(records_projets,"ZIBaC"), "Toutes");
+    setSelectOptions(selFiliere, choixColUniques(records_projets,"Filiere"), "Toutes");
+    setSelectOptions(selPerimetre, choixColUniques(records_projets,"Perimetre"), "Tous");
+    setSelectOptions(selLevier, choixColUniques(records_projets,"Procede"), "Tous");
+  }
+
+  function setSelectOptions(selectEl, values, labelAll) {
+    const current = selectEl.value;
+    selectEl.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = labelAll;
+    selectEl.appendChild(optAll);
+
+    for (const v of values) {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      selectEl.appendChild(opt);
+    }
+
+    // conserve si possible
+    if ([...selectEl.options].some(o => o.value === current)) {
+      selectEl.value = current;
+    } else {
+      selectEl.value = "";
+    }
+  }
+
+  function choixColUniques (record,colName){
+    let list = record[colName];
+    let s_list = new Set(list);
+    let unique_list = [...s_list];
+    return unique_list.sort();
+  }
+
+  function clearFilters() {
+    document.getElementById("selectRegion").value = "";
+    document.getElementById("selectZIBaC").value = "";
+    document.getElementById("selectFiliere").value = "";
+    document.getElementById("selectPerimetre").value = "";
+    document.getElementById("selectLevier").value = "";
+    document.getElementById("search-by-name").value = "";
+    renderSuggestion(filtered_records_sites,true,false);
+    applyFilters();
+  }
+
+  /* FILTRES */
+
+
+  function computeLastUpdate(records) {
+    const now = new Date();
+    const el = document.getElementById("update-date");
+    el.textContent = now.toLocaleDateString("fr-FR");
+  }
+
+  function attachUIEvents() {
+    const ids = ["selectRegion","selectZIBaC","selectFiliere","selectPerimetre","selectLevier"];
+    for (const id of ids) document.getElementById(id).addEventListener("change", applyFilters);
+
+    document.getElementById("btnSearch").addEventListener("click", applyFilters);
+    document.getElementById("btnClear").addEventListener("click", clearFilters);
+
+    // recherche live (sans spam) : on attend 250ms
+    let t;
+    document.getElementById("search-by-name").addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(applyFilters, 250);
+    });
+
+    document.addEventListener("click", e => {
+      const input = document.getElementById("search-by-name");
+      const list  = document.getElementById("suggestions");
+      if (e.target !== input) list.innerHTML = "";
+    });
+  }
+
+  async function chargerDonnees() {                                     // Fonction qui importe les données et trace les graphs
+    
+    attachUIEvents();
+    records_projets = await grist.docApi.fetchTable('Base_projets');
+    records_aides = await grist.docApi.fetchTable('Base_aides');
+    records_sites = await grist.docApi.fetchTable('Base_sites');
+    computeLastUpdate(records_projets);
+    fillFilterOptionsFromData();
+    applyFilters();
+    renderSuggestion(filtered_records_sites,false,false);
+
+
+
+    renderMap(filtered_records_sites);
+
+    graphique_CO2_procede_annee(filtered_records_projets);
+
+    graphique_CO2_etat_projet(filtered_records_projets);
+
+  }
+
+
+chargerDonnees();
+
+
+
+
+</script>
+
+
+</body>
+
+
+
+
+
+</html>
