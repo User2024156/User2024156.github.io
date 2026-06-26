@@ -747,16 +747,18 @@
     const dict_donnees = D_CO2_procede_annee(record);
     const cles = Object.keys(dict_donnees);
     const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
-    const btn = document.getElementById('hide-button-charts');
+    const btns = [document.getElementById('hide-button-charts'),document.getElementById('export-button-charts')];
     let doc = document.getElementById('canvas-charts-1');
     if (!cles.length) {
       doc.className = 'canvas-charts-1-hidden';
-      btn.style.display = 'none';
+      btns[0].style.display = 'none';
+      btns[1].style.display = 'none';
       return;
     }
     doc.className = 'canvas-charts-1-shown';
     btn.style.display = 'block';
     btn.textContent = 'Cacher';
+    btns[1].style.display = 'block';
     const ctx = document.getElementById('barChartCO2parAnnee').getContext('2d');
     let list_labels = list_annees.slice();                // On construit les labels à partir des intervalles de temps considérés
     list_labels[list_labels.length-1] = '2046-2050';
