@@ -19,6 +19,10 @@
   <!-- Sheet JS (extraction tableur Excel)-->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <script src="tom-select.complete.js"></script>
+  <link href="tom-select.bootstrap4.css" rel="stylesheet" />
+ 
 
   <style>
     :root{
@@ -147,6 +151,58 @@
       border:1px solid rgba(0,0,0,0.15);
     }
     .hint{color:#6b7280;font-size:12px;margin-top:2px;}
+
+    /* Wrapper principal — reprend la forme pilule de .form-control */
+    #selectRegion + .ts-wrapper .ts-control,
+    .ts-wrapper .ts-control {
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.15);
+      background: #fff;
+      box-shadow: var(--shadow-default);
+      font-size: 14px;
+      cursor: pointer;
+      flex-wrap: wrap;        /* tags sur plusieurs lignes si besoin */
+      align-items: center;
+    }
+
+    /* Supprimer le style par défaut de Tom Select */
+    .ts-wrapper.form-control {
+      padding: 0;
+      height: auto;
+    }
+
+    /* Champ de recherche interne */
+    .ts-control input {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Tags (choix multiples) */
+    .ts-control .item {
+      background: #e8edf5;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+    }
+
+    /* Dropdown */
+    .ts-dropdown {
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* Options au survol */
+    .ts-dropdown .option:hover,
+    .ts-dropdown .option.active {
+      background: #e8edf5;
+      color: inherit;
+    }
 
     	/* Dashboard */
 .dashboard{
@@ -371,7 +427,6 @@
       <div class="form-group">
         <label for="selectRegion">Région</label>
         <select class="form-control" id="selectRegion">
-          <option value="">Toutes</option>
         </select>
       </div>
 
@@ -488,7 +543,7 @@
 
   /* INTRODUCTION D'OBJETS + OUTILS + PARAMETRAGE GRIST */
 
-  grist.ready({ requiredAccess: 'full' });
+      grist.ready({ requiredAccess: 'full' });
 
   const annees_etudiees = Array.from({ length: 17 }, (_, i) => 2024 + i);
 
@@ -1183,11 +1238,11 @@ function majGraphiques() {
 
   function getFilters() {
     return{
-      region : document.getElementById("selectRegion").value,
-      zibac : document.getElementById("selectZIBaC").value,
-      perimetre : document.getElementById("selectPerimetre").value,
-      filiere : document.getElementById("selectFiliere").value,
-      levier : document.getElementById("selectLevier").value,
+      region : Array.from(document.getElementById('selectRegion').selectedOptions).map(opt => opt.value),
+      zibac : Array.from(document.getElementById('selectZIBaC').selectedOptions).map(opt => opt.value),
+      perimetre : Array.from(document.getElementById('selectPerimetre').selectedOptions).map(opt => opt.value),
+      filiere : Array.from(document.getElementById('selectFiliere').selectedOptions).map(opt => opt.value),
+      levier : Array.from(document.getElementById('selectLevier').selectedOptions).map(opt => opt.value),
       search : document.getElementById("search-by-name").value
     };
   }
@@ -1199,7 +1254,7 @@ function majGraphiques() {
       filtered_record[c] = [];                    
     }
     for (let r = 0 ; r<list_id.length ; r++){             // r = rows ; c = columns
-      if(valeur_filtre === record[type_filtre][r] || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
+      if(valeur_filtre.includes(record[type_filtre][r]) || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
@@ -1220,28 +1275,35 @@ function majGraphiques() {
     const filters = getFilters();
     filtered_records_projets = deepCopyRecord(records_projets);
     filtered_records_aides = deepCopyRecord(records_aides);
-    filtered_records_sites = deepCopyRecord(records_sites)
-    if (filters.region){
+    filtered_records_sites = deepCopyRecord(records_sites);
+
+    const region    = filters.region.filter(v => v !== '');
+    const zibac     = filters.zibac.filter(v => v !== '');
+    const filiere   = filters.filiere.filter(v => v !== '');
+    const perimetre = filters.perimetre.filter(v => v !== '');
+    const levier    = filters.levier.filter(v => v !== '');
+
+    if (filters.region.length){
       filtered_records_projets = filterTable(filtered_records_projets, 'Region', filters.region);
       filtered_records_aides = filterTable(filtered_records_aides, 'Region', filters.region);
       filtered_records_sites = filterTable(filtered_records_sites, 'Region', filters.region);
       renderSuggestion(filtered_records_sites,false,true);
     }
-    if (filters.zibac) {
+    if (filters.zibac.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', filters.zibac);
       filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', filters.zibac);
       filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', filters.zibac);
       renderSuggestion(filtered_records_sites,false,true);
     }
-    if (filters.filiere){
+    if (filters.filiere.length){
       filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filters.filiere);
       filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filters.filiere);
       renderSuggestion(filtered_records_sites,false,true);
     }
-    if (filters.perimetre) {
+    if (filters.perimetre.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
     } 
-    if (filters.levier) {
+    if (filters.levier.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
     }
     if (filters.search.length >= 3) {
@@ -1258,41 +1320,37 @@ function majGraphiques() {
   }
 
   function fillFilterOptionsFromData() {
-    const selRegion = document.getElementById("selectRegion");
-    const selZIBaC = document.getElementById("selectZIBaC");
-    const selFiliere = document.getElementById("selectFiliere");
-    const selPerimetre = document.getElementById("selectPerimetre");
-    const selLevier = document.getElementById("selectLevier");
+    const filtres = [
+      { id: 'selectRegion',   col: 'Region',   labelAll: 'Toutes' },
+      { id: 'selectZIBaC',    col: 'ZIBaC',    labelAll: 'Toutes' },
+      { id: 'selectFiliere',  col: 'Filiere',  labelAll: 'Toutes' },
+      { id: 'selectPerimetre',col: 'Perimetre',labelAll: 'Tous'   },
+      { id: 'selectLevier',   col: 'Procede',  labelAll: 'Tous'   },
+    ];
 
-    setSelectOptions(selRegion, choixColUniques(records_projets,"Region"), "Toutes");
-    setSelectOptions(selZIBaC, choixColUniques(records_projets,"ZIBaC"), "Toutes");
-    setSelectOptions(selFiliere, choixColUniques(records_projets,"Filiere"), "Toutes");
-    setSelectOptions(selPerimetre, choixColUniques(records_projets,"Perimetre"), "Tous");
-    setSelectOptions(selLevier, choixColUniques(records_projets,"Procede"), "Tous");
-  }
-
-  function setSelectOptions(selectEl, values, labelAll) {
-    const current = selectEl.value;
-    selectEl.innerHTML = "";
-    const optAll = document.createElement("option");
-    optAll.value = "";
-    optAll.textContent = labelAll;
-    selectEl.appendChild(optAll);
-
-    for (const v of values) {
-      const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = v;
-      selectEl.appendChild(opt);
-    }
-
-    // conserve si possible
-    if ([...selectEl.options].some(o => o.value === current)) {
-      selectEl.value = current;
-    } else {
-      selectEl.value = "";
+    for (const f of filtres) {
+      const tom = new TomSelect(`#${f.id}`, {
+        maxItems: null,
+        create: false,
+        options: setSelectOptions(choixColUniques(records_projets, f.col), f.labelAll),
+        hidePlaceholder: true,
+        wrapperClass: 'ts-wrapper form-group',
+        controlClass: 'ts-control form-control',
+        onChange() {
+          applyFilters();
+        }
+      });
+      tom.settings.placeholder = f.labelAll;
+      tom.inputState();
     }
   }
+
+  function setSelectOptions(values, labelAll) {
+    let options_I = [{value : "", text : labelAll}];
+    let options_V = values.map(v => ({value : v, text : v}));
+    return options_I.concat(options_V);
+  }
+
 
   function choixColUniques (record,colName){
     let list = record[colName];
@@ -1302,13 +1360,12 @@ function majGraphiques() {
   }
 
   function clearFilters() {
-    document.getElementById("selectRegion").value = "";
-    document.getElementById("selectZIBaC").value = "";
-    document.getElementById("selectFiliere").value = "";
-    document.getElementById("selectPerimetre").value = "";
-    document.getElementById("selectLevier").value = "";
+    // ✅ Cibler les <select> originaux, pas les wrappers
+    document.querySelectorAll('select').forEach(el => {
+      if (el.tomselect) el.tomselect.clear();
+    });
     document.getElementById("search-by-name").value = "";
-    renderSuggestion(filtered_records_sites,true,false);
+    renderSuggestion(filtered_records_sites, true, false);
     applyFilters();
   }
 
@@ -1352,6 +1409,9 @@ function majGraphiques() {
     fillFilterOptionsFromData();
     applyFilters();
     renderSuggestion(filtered_records_sites,false,false);
+    document.addEventListener("DOMContentLoaded", function(event) {
+      new TomSelect('select', settings);
+    });
 
 
 
