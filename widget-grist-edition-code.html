@@ -579,14 +579,29 @@
 
   function exportToExcel(record,col_names,filename){
     const colonnes = Array.from({length : record['id'].length}, (i) => ({}));
-    const sheetname = 'Filtres :';
+    let sheetname;
     const getF = getFilters();
     const filters = Object.keys(getF);
-    for (f of filters){
-      sheetname.concat('', ` ${f} = ${getF[f]}`)
+    if (filters.every( f => getF[f] == '')){
+      sheetname = 'Pas de filtre';
+    }
+    else{
+      sheetname = 'Filtres{';
+      for (const f of filters){
+        if (getF[f] != ""){
+          if (sheetname == 'Filtres{'){
+            sheetname = sheetname.concat('', `${getF[f]}`)
+          }
+          else {
+            sheetname = sheetname.concat(',', `${getF[f]}`);
+          }
+        }
+      }
+      sheetname = sheetname.concat('', '}');
+      if (sheetname.length > 30) sheetname = 'Données filtrées';
     }
     for (const c of col_names){
-      for (let i = 0 ; i<record.length ; i++ ){
+      for (let i = 0 ; i<record['id'].length ; i++ ){
         colonnes[i][c] = record[c][i];
       }  
     }
