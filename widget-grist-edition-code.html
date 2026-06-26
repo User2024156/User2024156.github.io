@@ -372,7 +372,7 @@
     .sw-none{background:var(--color-aucune-habilitation-pastille);}
     .sw-nodata{background:var(--color-lack-data-pastille);}
 
-    #leaflet-map{width:100%;height:420px;border-radius:14px;overflow:hidden;border:1px solid #E7E9FF;}
+    #leaflet-map{width:100%;height:600px;border-radius:14px;overflow:hidden;border:1px solid #E7E9FF;}
 
     .empty{
       padding:14px;border-radius:14px;border:1px dashed #C7CBFF;background:#FBFBFF;
@@ -1366,7 +1366,6 @@ function majGraphiques() {
   }
 
   function clearFilters() {
-    // ✅ Cibler les <select> originaux, pas les wrappers
     document.querySelectorAll('select').forEach(el => {
       if (el.tomselect) el.tomselect.clear();
     });
