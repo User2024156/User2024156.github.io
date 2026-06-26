@@ -756,8 +756,8 @@
       return;
     }
     doc.className = 'canvas-charts-1-shown';
-    btn.style.display = 'block';
-    btn.textContent = 'Cacher';
+    btns[0].style.display = 'block';
+    btns[0].textContent = 'Cacher';
     btns[1].style.display = 'block';
     const ctx = document.getElementById('barChartCO2parAnnee').getContext('2d');
     let list_labels = list_annees.slice();                // On construit les labels à partir des intervalles de temps considérés
