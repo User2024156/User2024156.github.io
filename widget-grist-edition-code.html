@@ -437,7 +437,7 @@
     <header class='section-header'>
       <h1>Emissions abattues </h1>
       <div id="map-buttons">
-        <button class="btn secondary" onclick="exportToExcel(['Nom_du_site','Region','Perimetre','Filiere','Procede'],'Extraction Excel','Extraction')" id="export-button-chart">Exporter données</button>
+        <button class="btn secondary" onclick="exportToExcel(filtered_records_projets,['Nom_du_site','Region','Perimetre','Filiere','Procede'],'Extraction Excel','Extraction')" id="export-button-chart">Exporter données</button>
         <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button> 
       </div>
     </header>
@@ -574,10 +574,9 @@
   }
 
 
-  function exportToExcel(columns,sheetname,filename){
-    const record = filtered_records_projets;
-    const colonnes = Array.from({length : record.length}, (i) => {});
-    for (const c of columns){
+  function exportToExcel(record,col_names,sheetname,filename){
+    const colonnes = Array.from({length : record[id].length}, (i) => ({}));
+    for (const c of col_names){
       for (let i = 0 ; i<record.length ; i++ ){
         colonnes[i][c] = record[c][i];
       }  
