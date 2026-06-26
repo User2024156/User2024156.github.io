@@ -1291,18 +1291,18 @@ function majGraphiques() {
       filtered_records_projets = filterTable(filtered_records_projets, 'Region', filters.region);
       filtered_records_aides = filterTable(filtered_records_aides, 'Region', filters.region);
       filtered_records_sites = filterTable(filtered_records_sites, 'Region', filters.region);
-      renderSuggestion(filtered_records_sites,false,true);
+      // renderSuggestion(filtered_records_sites,false,true);
     }
     if (filters.zibac.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', filters.zibac);
       filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', filters.zibac);
       filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', filters.zibac);
-      renderSuggestion(filtered_records_sites,false,true);
+      // renderSuggestion(filtered_records_sites,false,true);
     }
     if (filters.filiere.length){
       filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filters.filiere);
       filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filters.filiere);
-      renderSuggestion(filtered_records_sites,false,true);
+      // renderSuggestion(filtered_records_sites,false,true);
     }
     if (filters.perimetre.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
@@ -1341,6 +1341,7 @@ function majGraphiques() {
         hidePlaceholder: true,
         wrapperClass: 'ts-wrapper form-group',
         controlClass: 'ts-control form-control',
+        selectOnTab: true,
         onChange() {
           applyFilters();
         }
