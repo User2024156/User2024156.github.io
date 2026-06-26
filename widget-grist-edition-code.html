@@ -578,7 +578,7 @@
 
 
   function exportToExcel(record,col_names,filename){
-    const colonnes = Array.from({length : record[id].length}, (i) => ({}));
+    const colonnes = Array.from({length : record['id'].length}, (i) => ({}));
     const sheetname = 'Filtres :';
     const getF = getFilters();
     const filters = Object.keys(getF);
