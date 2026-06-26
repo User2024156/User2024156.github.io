@@ -16,15 +16,9 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <!-- Sheet JS (extraction tableur Excel) -->
+  <!-- Sheet JS (extraction tableur Excel)-->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-  <!-- Tom select pour selection à choix multiple pour les filtres -->
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
   <style>
     :root{
@@ -143,19 +137,6 @@
     }
     select.form-control{cursor:pointer;}
     .form-control::placeholder{color:var(--color-text-placeholder);}
-
-    .ts-wrapper .ts-control {
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.15);
-      box-shadow: var(--shadow-default);
-      min-height: 34px;
-      padding: 0 14px;
-      font-size: 14px;
-    }
-    .ts-wrapper .ts-control input {
-      font-size: 14px;
-    }
-
     .btn{
       height:34px;padding:0 16px;border-radius:999px;border:none;
       cursor:pointer;font-weight:700;box-shadow:var(--shadow-default);
@@ -1200,11 +1181,11 @@ function majGraphiques() {
 
   function getFilters() {
     return{
-      region : tomInstances["selectRegion"]?.getValue(),
-      zibac : tomInstances["selectZIBaC"]?.getValue(),
-      perimetre : tomInstances["selectPerimetre"]?.getValue(),
-      filiere : tomInstances["selectFiliere"]?.getValue(),
-      levier : tomInstances["selectLevier"]?.getValue(),
+      region : document.getElementById("selectRegion").value,
+      zibac : document.getElementById("selectZIBaC").value,
+      perimetre : document.getElementById("selectPerimetre").value,
+      filiere : document.getElementById("selectFiliere").value,
+      levier : document.getElementById("selectLevier").value,
       search : document.getElementById("search-by-name").value
     };
   }
@@ -1216,7 +1197,7 @@ function majGraphiques() {
       filtered_record[c] = [];                    
     }
     for (let r = 0 ; r<list_id.length ; r++){             // r = rows ; c = columns
-      if(record[type_filtre][r] === valeur_filtre || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
+      if(valeur_filtre === record[type_filtre][r] || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
@@ -1288,19 +1269,14 @@ function majGraphiques() {
     setSelectOptions(selLevier, choixColUniques(records_projets,"Procede"), "Tous");
   }
 
-
-  const tomInstances = {}; // garder les références pour reset/update
-
   function setSelectOptions(selectEl, values, labelAll) {
-    const id = selectEl.id;
-
-    // Détruire l'instance existante si elle existe
-    if (tomInstances[id]) {
-      tomInstances[id].destroy();
-    }
-
-    // Reconstruire les options natives
+    const current = selectEl.value;
     selectEl.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = labelAll;
+    selectEl.appendChild(optAll);
+
     for (const v of values) {
       const opt = document.createElement("option");
       opt.value = v;
@@ -1308,23 +1284,13 @@ function majGraphiques() {
       selectEl.appendChild(opt);
     }
 
-    // Initialiser Tom Select en mode multi
-    tomInstances[id] = new TomSelect(`#${id}`, {
-      plugins: ['remove_button', 'checkbox_options'],
-      placeholder: labelAll,
-      maxOptions: null,
-      onchange: applyFilters
-    });
-
     // conserve si possible
     if ([...selectEl.options].some(o => o.value === current)) {
       selectEl.value = current;
     } else {
       selectEl.value = "";
     }
-
   }
-
 
   function choixColUniques (record,colName){
     let list = record[colName];
@@ -1334,11 +1300,13 @@ function majGraphiques() {
   }
 
   function clearFilters() {
-    const ids = ["selectRegion", "selectZIBaC", "selectFiliere", "selectPerimetre", "selectLevier"];
-    for (const id of ids) {
-      tomInstances[id]?.clear(); // vide la sélection sans détruire
-    }
+    document.getElementById("selectRegion").value = "";
+    document.getElementById("selectZIBaC").value = "";
+    document.getElementById("selectFiliere").value = "";
+    document.getElementById("selectPerimetre").value = "";
+    document.getElementById("selectLevier").value = "";
     document.getElementById("search-by-name").value = "";
+    renderSuggestion(filtered_records_sites,true,false);
     applyFilters();
   }
 
