@@ -1322,7 +1322,7 @@ function majGraphiques() {
       filtered_records_aides = filterTable(filtered_records_aides, 'Nom_du_site', filters.search);
       filtered_records_sites = filterTable(filtered_records_sites, 'name_site', filters.search);
       renderList(filtered_records_sites,false);
-      renderSuggestion(filtered_records_sites,false,false);
+      renderSuggestion(filtered_records_sites,false,test_filtre);
     }
     if (filters.search.length < 3){
       renderList(filtered_records_sites,true,false);
