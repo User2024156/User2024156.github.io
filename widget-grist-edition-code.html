@@ -1286,32 +1286,38 @@ function majGraphiques() {
     const filiere   = filters.filiere.filter(v => v !== '');
     const perimetre = filters.perimetre.filter(v => v !== '');
     const levier    = filters.levier.filter(v => v !== '');
+    let test_filtre = false;
 
-    if (filters.region.length){
+    if (region.length){
       filtered_records_projets = filterTable(filtered_records_projets, 'Region', filters.region);
       filtered_records_aides = filterTable(filtered_records_aides, 'Region', filters.region);
       filtered_records_sites = filterTable(filtered_records_sites, 'Region', filters.region);
       // renderSuggestion(filtered_records_sites,false,true);
+      test_filtre = true;
     }
-    if (filters.zibac.length) {
+    if (zibac.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', filters.zibac);
       filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', filters.zibac);
       filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', filters.zibac);
       // renderSuggestion(filtered_records_sites,false,true);
+      test_filtre = true;
     }
-    if (filters.filiere.length){
+    if (filiere.length){
       filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filters.filiere);
       filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filters.filiere);
       // renderSuggestion(filtered_records_sites,false,true);
+      test_filtre = true;
     }
-    if (filters.perimetre.length) {
+    if (perimetre.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
       filtered_records_sites = filterTable(filtered_records_sites, 'Perimetre', filters.perimetre);
+      test_filtre = true;
     } 
-    if (filters.levier.length) {
+    if (levier.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
+      test_filtre = true;
     }
-    if (filters.search.length >= 3) {
+    if (filters.search.length >= 3 || test_filtre) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Nom_du_site', filters.search);
       filtered_records_aides = filterTable(filtered_records_aides, 'Nom_du_site', filters.search);
       filtered_records_sites = filterTable(filtered_records_sites, 'name_site', filters.search);
