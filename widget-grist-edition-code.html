@@ -204,6 +204,10 @@
       color: inherit;
     }
 
+    select:has(+ .ts-wrapper) { /* S'assure que le select original n'est plus visible derrière l'affichage TomSelect */
+      display: none;
+    }
+
     	/* Dashboard */
 .dashboard{
   display:flex;
