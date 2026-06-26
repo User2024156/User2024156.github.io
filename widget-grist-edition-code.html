@@ -1302,6 +1302,7 @@ function majGraphiques() {
     }
     if (filters.perimetre.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Perimetre', filters.perimetre);
     } 
     if (filters.levier.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
