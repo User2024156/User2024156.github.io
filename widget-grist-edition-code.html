@@ -1197,10 +1197,6 @@ function renderSuggestion(records, reset, filtre_on) {
         const index = i;
         if (Number.isFinite(lat) && Number.isFinite(lon) && (lat != 0 && lon != 0)) pts.push({ index, lat, lon });
       }
-      if (pts.length == 1){
-        console.log(pts);
-      }
-      console.log(pts.length);
       if (!pts.length) {
         emptyMap.textContent = "Aucun point géolocalisé (Latitude/Longitude manquantes) pour cette sélection.";
         emptyMap.style.display = "block";
