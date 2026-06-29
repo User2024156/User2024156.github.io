@@ -1257,8 +1257,10 @@ function majGraphiques() {
     for (const c of Object.keys(record)) {
       filtered_record[c] = [];                    
     }
-    for (let r = 0 ; r<list_id.length ; r++){             // r = rows ; c = columns
-      if(valeur_filtre.includes(record[type_filtre][r]) || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
+    for (let r = 0 ; r < list_id.length ; r++){             // r = rows ; c = columns
+      const donneeDansFiltre = valeur_filtre.includes(record[type_filtre][r]);
+      const searchDansNom = typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase());
+      if((type_filtre != 'Nom_du_site' && donneeDansFiltre) || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && searchDansNom))  {
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
