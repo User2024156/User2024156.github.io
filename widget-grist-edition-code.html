@@ -1346,7 +1346,7 @@ function majGraphiques() {
       const tom = new TomSelect(`#${f.id}`, {
         maxItems: null,
         create: false,
-        options: setSelectOptions(choixColUniques(records_projets, f.col), f.labelAll),
+        options: setSelectOptions(records_projets, f.col, f.labelAll),
         hidePlaceholder: true,
         wrapperClass: 'ts-wrapper form-group',
         controlClass: 'ts-control form-control',
@@ -1362,9 +1362,17 @@ function majGraphiques() {
     }
   }
 
-  function setSelectOptions(values, labelAll) {
-    let options_I = [{value : "", text : labelAll}];
-    let options_V = values.map(v => ({value : v, text : v}));
+  function setSelectOptions(record, col, labelAll) {
+    const values = choixColUniques[record,col];
+    let options_I =  [{value : "", text : labelAll}];
+    let options_V;
+    if (col == 'Procede'){
+      let procedesTraites = traitement_donnees_CO2_procede(record)[0];
+      options_V = [...new Set(procedesTraites)].sort().map(v => ({ value: v, text: v }));
+    }
+    else{
+      options_V = values.map(v => ({value : v, text : v}));
+    }
     return options_I.concat(options_V);
   }
 
