@@ -648,11 +648,13 @@
     const titre = [' '];
     const premLigne = dataU.data.map(dU => (dU.annee));
     const premColonne = dataU.labels;
-    const colonnes = premLigne.map((_,i) => (i == 0 ? titre.concat(premColonne) : Array.from( {length : premColonne.length +1}, (_,j) => j == 0 ? premLigne[i-1] : '' )));
+    const colonnes = premLigne.map((_,i) => (i == 0 ? titre.concat(premColonne) : Array.from( {length : premColonne.length +1}, (_,j) => j == 0 ? premLigne[i-1] : 0 )));
 
     for (let i = 0 ; i < premLigne.length ; i++){
       const suiteColonne = premColonne.map(p => dataU.data[i].emissions[p])
-      colonnes[i] = colonnes[i].concat(suiteColonne);
+      for (let j = 0 ; j < premColonne.length ; j++){
+        colonnes[i][j+1] = suiteColonne[j+1];
+      }
     }
 
     let sheetname;
