@@ -650,7 +650,7 @@
     const colonnes = premLigne.map((_,i) => (i == 0 ? titre.concat(premColonne) : Array.from( {length : premColonne.length +1}, (_,j) => j == 0 ? premLigne[i-1] : '' )));
 
     for (let i = 0 ; i < premLigne.length ; i++){
-      const suiteColonne = premColonne.map(p => dataU[i]['emissions'][p])
+      const suiteColonne = premColonne.map(p => dataU[i].emissions[p])
       colonnes[i] = colonnes[i].concat(suiteColonne);
     }
 
