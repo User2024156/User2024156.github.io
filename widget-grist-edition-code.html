@@ -506,7 +506,7 @@
     <header class='section-header'>
       <h1>Emissions abattues </h1>
       <div id="map-buttons">
-        <button class="btn secondary" onclick="exportToExcel(graphique_CO2_procede_annee(filtered_records_projets)[1],'Extraction_Base_Projet_filtrée.xlsx')" id="export-button-charts">Exporter données</button>
+        <button class="btn secondary" onclick="exportToExcel(graphique_CO2_procede_annee(filtered_records_projets,false)[1],'Extraction_Base_Projet_filtrée.xlsx')" id="export-button-charts">Exporter données</button>
         <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')" id="hide-button-charts">Cacher</button> 
       </div>
     </header>
@@ -812,7 +812,7 @@
   let map;
   let markersLayer;
 
-  function graphique_CO2_procede_annee(record) {             // Trace le graphique à partir du dictionnaire construit par la fonction D_CO2_procede_annee
+  function graphique_CO2_procede_annee(record,btnClear){             // Trace le graphique à partir du dictionnaire construit par la fonction D_CO2_procede_annee
 
     const dict_donnees = D_CO2_procede_annee(record);
     const cles = Object.keys(dict_donnees);
@@ -821,14 +821,18 @@
     let doc = document.getElementById('canvas-charts-1');
     if (!cles.length) {
       doc.className = 'canvas-charts-1-hidden';
-      btns[0].style.display = 'none';
-      btns[1].style.display = 'none';
+      if(btnClear == true){
+        btns[0].style.display = 'none';
+        btns[1].style.display = 'none';
+      }
       return;
     }
     doc.className = 'canvas-charts-1-shown';
-    btns[0].style.display = 'block';
-    btns[0].textContent = 'Cacher';
-    btns[1].style.display = 'block';
+    if(btnClear == true){
+      btns[0].style.display = 'block';
+      btns[0].textContent = 'Cacher';
+      btns[1].style.display = 'block';
+    }
     const ctx = document.getElementById('barChartCO2parAnnee').getContext('2d');
     let list_labels = list_annees.slice();                // On construit les labels à partir des intervalles de temps considérés
     list_labels[list_labels.length-1] = '2046-2050';
@@ -1248,7 +1252,7 @@ function renderSuggestion(records, reset, filtre_on) {
 function majGraphiques() {
   if (chartCO2Procede) chartCO2Procede.destroy();
   if (chartCO2Etat) chartCO2Etat.destroy();
-  chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets)[0];
+  chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets,true)[0];
   chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
   renderMap(filtered_records_sites,'logarithmique');
 }
@@ -1475,7 +1479,7 @@ function majGraphiques() {
 
     renderMap(filtered_records_sites,'logarithmique');
 
-    graphique_CO2_procede_annee(filtered_records_projets)[0];
+    graphique_CO2_procede_annee(filtered_records_projets,true)[0];
 
     graphique_CO2_etat_projet(filtered_records_projets);
 
