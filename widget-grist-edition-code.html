@@ -645,8 +645,8 @@
 
   function exportToExcel(dataU,filename){                                                                       // dataU = [ { annee : XX,  labels : [Procédés],  emissions : {Procédé : XX tCO2e} } ]
     const titre = [' '];
-    const premLigne = dataU[data].map(dU => (dU[annee]));
-    const premColonne = dataU[labels];
+    const premLigne = dataU.data.map(dU => (dU.annee));
+    const premColonne = dataU.labels;
     const colonnes = premLigne.map((_,i) => (i == 0 ? titre.concat(premColonne) : Array.from( {length : premColonne.length +1}, (_,j) => j == 0 ? premLigne[i-1] : '' )));
 
     for (let i = 0 ; i < premLigne.length ; i++){
@@ -677,7 +677,7 @@
     }
     const worksheet = XLSX.utils.aoa_to_sheet(colonnes);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetname, filename);
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetname);
     XLSX.writeFile(workbook,filename);
   }
 
