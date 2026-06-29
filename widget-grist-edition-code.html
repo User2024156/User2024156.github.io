@@ -1261,7 +1261,20 @@ function majGraphiques() {
       const donneeDansFiltre = valeur_filtre.includes(record[type_filtre][r]);
       const isSearch = (type_filtre == 'Nom_du_site' || type_filtre == 'name_site');
       const isNotSansNom = record[type_filtre][r] != '';
-      if((!isSearch && donneeDansFiltre) || (isSearch && isNotSansNom && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
+      const isString = typeof record[type_filtre][r] === 'string';
+      const isProcede = (type_filtre == 'Procede');
+
+      if(isSearch && isNotSansNom && isString && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase()))  {     // Test de la barre de recherche (on doit exclure les sans nom '')
+        for(const c of Object.keys(record)){
+          filtered_record[c].push(record[c][r]);
+        }
+      }
+      else if (isProcede && isString && valeur_filtre.map(v => record[type_filtre][r].toLowerCase().startsWith(v.toLowerCase())).includes(true)){                                 // Test des leviers de décarbonation (on doit prendre en compte le reformatage : startsWith plutôt que includes)
+        for(const c of Object.keys(record)){
+          filtered_record[c].push(record[c][r]);
+        } 
+      }
+      else if(donneeDansFiltre){                                                                                                                                      // Test du reste : la valeur est elle dans un des filtres choisi
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
@@ -1318,7 +1331,6 @@ function majGraphiques() {
     } 
     if (levier.length) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
-      test_filtre = true;
     }
     if (filters.search.length >= 3 || test_filtre) {
       filtered_records_projets = filterTable(filtered_records_projets, 'Nom_du_site', filters.search);
