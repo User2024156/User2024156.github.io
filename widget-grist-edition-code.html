@@ -643,11 +643,17 @@
   }
 
 
-  function exportToExcel(dataU,filename){
-    const titre = [''];
+  function exportToExcel(dataU,filename){                                                                       // dataU = [ { annee : XX,  labels : [Procédés],  emissions : {Procédé : XX tCO2e} } ]
+    const titre = [' '];
     const premLigne = dataU[data].map(dU => (dU[annee]));
-    const premColonne = titre.concat(dataU[labels]);
-    const colonnes = premLigne.map((_,i) => (i == 0 ? premColonne : [premLigne(i-1)]));
+    const premColonne = dataU[labels];
+    const colonnes = premLigne.map((_,i) => (i == 0 ? titre.concat(premColonne) : Array.from( {length : premColonne.length +1}, (_,j) => j == 0 ? premLigne[i-1] : '' )));
+
+    for (let i = 0 ; i < premLigne.length ; i++){
+      const suiteColonne = premColonne.map(p => dataU[i]['emissions'][p])
+      colonnes[i] = colonnes[i].concat(suiteColonne);
+    }
+
     let sheetname;
     const getF = getFilters();
     const filters = Object.keys(getF);
@@ -669,10 +675,7 @@
       sheetname = sheetname.concat('', '}');
       if (sheetname.length > 30) sheetname = 'Données filtrées';
     }
-    for (let i = 0 ; i < premLigne.length ; i++){
-      const suiteColonne = premColonne.map(p => dataU[i][p])
-    }
-    const worksheet = XLSX.utils.json_to_sheet(colonnes);
+    const worksheet = XLSX.utils.aoa_to_sheet(colonnes);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetname, filename);
     XLSX.writeFile(workbook,filename);
@@ -813,7 +816,6 @@
 
     const dict_donnees = D_CO2_procede_annee(record);
     const cles = Object.keys(dict_donnees);
-    let dataU;
     const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
     const btns = [document.getElementById('hide-button-charts'),document.getElementById('export-button-charts')];
     let doc = document.getElementById('canvas-charts-1');
@@ -835,12 +837,24 @@
     list_annees[list_annees.length-2] = 2043;
     list_labels[list_labels.length-3] = '2036-2040';
     list_annees[list_annees.length-3] = 2038;
+
     const list_procede = [...new Set(cles.map(k => k.split('|')[1]))];
     let backgroundColors = Array.from({ length: list_procede.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
     let borderColors = Array.from({ length: list_procede.length }, (_, i) => 'rgba(0,0,0,0)');
     let dashedBorders = Array.from({ length: list_procede.length }, (_,i) => false);
     let bases = Array.from({ length: list_procede.length }, (_,i) => null);
-    let datas = list_procede.map(p => list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0));    
+    let datas = list_procede.map(p => list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0));
+    
+
+    let dataU = {
+      labels : list_procede,
+      data : list_labels.map( (a,i) => {return {
+        annee : a,
+        emissions : list_procede.map(p => dict_donnees[`${a}|${p}`] ?? 0),
+        };}),
+     };                                                                                                      // Liste d'objets pour l'extraction de données en Excel (cf Export Excel)
+
+
     for (let i = 0 ; i < list_procede.length ; i++){
       if (list_procede[i] == 'Hydrogène'){
         backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-hydrogene');
@@ -904,7 +918,6 @@
       backgroundColor : backgroundColors[i % backgroundColors.length],
       borderColor : borderColors[i],
       dashed: dashedBorders[i],
-      // base:bases[i],
       stack: 'stack1',
       skipNull:true,
     }))
