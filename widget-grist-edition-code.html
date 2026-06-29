@@ -1264,17 +1264,21 @@ function majGraphiques() {
       const isString = typeof record[type_filtre][r] === 'string';
       const isProcede = (type_filtre == 'Procede');
 
-      if(isSearch && isNotSansNom && isString && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase()))  {     // Test de la barre de recherche (on doit exclure les sans nom '')
-        for(const c of Object.keys(record)){
-          filtered_record[c].push(record[c][r]);
+      if(isSearch){
+        if(isNotSansNom && isString && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())){                                                 // Test de la barre de recherche (on doit exclure les sans nom '')
+          for(const c of Object.keys(record)){
+            filtered_record[c].push(record[c][r]);
+          }
         }
       }
-      else if (isProcede && isString && valeur_filtre.map(v => record[type_filtre][r].toLowerCase().startsWith(v.toLowerCase())).includes(true)){                                 // Test des leviers de décarbonation (on doit prendre en compte le reformatage : startsWith plutôt que includes)
-        for(const c of Object.keys(record)){
-          filtered_record[c].push(record[c][r]);
-        } 
+      else if (isProcede){
+        if(isString && valeur_filtre.map(v => (record[type_filtre][r].toLowerCase().startsWith(v.toLowerCase()))).includes(true)){                                 // Test des leviers de décarbonation (on doit prendre en compte le reformatage : startsWith plutôt que includes)
+          for(const c of Object.keys(record)){
+            filtered_record[c].push(record[c][r]);
+          } 
+        }
       }
-      else if(donneeDansFiltre){                                                                                                                                      // Test du reste : la valeur est elle dans un des filtres choisi
+      else if(donneeDansFiltre){                                                                                                                                  // Test du reste : la valeur est elle dans un des filtres choisi
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
