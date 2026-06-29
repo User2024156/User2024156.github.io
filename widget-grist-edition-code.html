@@ -812,6 +812,7 @@
 
     const dict_donnees = D_CO2_procede_annee(record);
     const cles = Object.keys(dict_donnees);
+    let dataU;
     const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
     const btns = [document.getElementById('hide-button-charts'),document.getElementById('export-button-charts')];
     let doc = document.getElementById('canvas-charts-1');
@@ -972,7 +973,7 @@
           maintainAspectRatio: false 
         }
     });
-    return chart;
+    return [chart,dataU];
   }
   
 
@@ -1237,7 +1238,7 @@ function renderSuggestion(records, reset, filtre_on) {
 function majGraphiques() {
   if (chartCO2Procede) chartCO2Procede.destroy();
   if (chartCO2Etat) chartCO2Etat.destroy();
-  chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets);
+  chartCO2Procede = graphique_CO2_procede_annee(filtered_records_projets)[0];
   chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
   renderMap(filtered_records_sites,'logarithmique');
 }
@@ -1464,7 +1465,7 @@ function majGraphiques() {
 
     renderMap(filtered_records_sites,'logarithmique');
 
-    graphique_CO2_procede_annee(filtered_records_projets);
+    graphique_CO2_procede_annee(filtered_records_projets)[0];
 
     graphique_CO2_etat_projet(filtered_records_projets);
 
