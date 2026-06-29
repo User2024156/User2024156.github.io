@@ -848,10 +848,10 @@
 
     let dataU = {
       labels : list_procede,
-      data : list_labels.map( (a,i) => {return {
+      data : list_labels.map( (a,i) => ( {
         annee : a,
-        emissions : list_procede.map(p => dict_donnees[`${a}|${p}`] ?? 0),
-        };}),
+        emissions : Object.fromEntries(list_procede.map(p => [p, dict_donnees[`${a}|${p}`] ?? 0]),
+        ),})),
      };                                                                                                      // Liste d'objets pour l'extraction de données en Excel (cf Export Excel)
 
 
