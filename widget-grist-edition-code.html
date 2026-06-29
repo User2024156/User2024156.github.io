@@ -1259,8 +1259,7 @@ function majGraphiques() {
     }
     for (let r = 0 ; r < list_id.length ; r++){             // r = rows ; c = columns
       const donneeDansFiltre = valeur_filtre.includes(record[type_filtre][r]);
-      const searchDansNom = typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase());
-      if((type_filtre != 'Nom_du_site' && donneeDansFiltre) || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && searchDansNom))  {
+      if((type_filtre != 'Nom_du_site' && donneeDansFiltre) || ((type_filtre == 'Nom_du_site' || type_filtre == 'name_site') && typeof record[type_filtre][r] === 'string' && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())))  {
         for(const c of Object.keys(record)){
           filtered_record[c].push(record[c][r]);
         }
@@ -1291,32 +1290,32 @@ function majGraphiques() {
     let test_filtre = false;
 
     if (region.length){
-      filtered_records_projets = filterTable(filtered_records_projets, 'Region', region);
-      filtered_records_aides = filterTable(filtered_records_aides, 'Region', region);
-      filtered_records_sites = filterTable(filtered_records_sites, 'Region', region);
+      filtered_records_projets = filterTable(filtered_records_projets, 'Region', filters.region);
+      filtered_records_aides = filterTable(filtered_records_aides, 'Region', filters.region);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Region', filters.region);
       // renderSuggestion(filtered_records_sites,false,true);
       test_filtre = true;
     }
     if (zibac.length) {
-      filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', zibac);
-      filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', zibac);
-      filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', zibac);
+      filtered_records_projets = filterTable(filtered_records_projets, 'ZIBaC', filters.zibac);
+      filtered_records_aides = filterTable(filtered_records_aides, 'ZIBaC', filters.zibac);
+      filtered_records_sites = filterTable(filtered_records_sites, 'ZIBaC_data', filters.zibac);
       // renderSuggestion(filtered_records_sites,false,true);
       test_filtre = true;
     }
     if (filiere.length){
-      filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filiere);
-      filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filiere);
+      filtered_records_projets = filterTable(filtered_records_projets, 'Filiere', filters.filiere);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Filiere', filters.filiere);
       // renderSuggestion(filtered_records_sites,false,true);
       test_filtre = true;
     }
     if (perimetre.length) {
-      filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', perimetre);
-      filtered_records_sites = filterTable(filtered_records_sites, 'Perimetre', perimetre);
+      filtered_records_projets = filterTable(filtered_records_projets, 'Perimetre', filters.perimetre);
+      filtered_records_sites = filterTable(filtered_records_sites, 'Perimetre', filters.perimetre);
       test_filtre = true;
     } 
     if (levier.length) {
-      filtered_records_projets = filterTable(filtered_records_projets, 'Procede', levier);
+      filtered_records_projets = filterTable(filtered_records_projets, 'Procede', filters.levier);
       test_filtre = true;
     }
     if (filters.search.length >= 3 || test_filtre) {
