@@ -1363,7 +1363,7 @@ function majGraphiques() {
   }
 
   function setSelectOptions(record, col, labelAll) {
-    const values = choixColUniques[record,col];
+    const values = choixColUniques(record,col);
     let options_I =  [{value : "", text : labelAll}];
     let options_V;
     if (col == 'Procede'){
