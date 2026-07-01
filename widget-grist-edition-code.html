@@ -684,7 +684,7 @@
     }
     const worksheet = XLSX.utils.aoa_to_sheet(colonnes);
     const workbook = XLSX.utils.book_new();
-    worksheet['!cols'][0] = titre[0].length.map((w) => ({ wch: w + 2}));
+    // worksheet['!cols'][0] = wch: titre[0].length + 2;
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetname);
     XLSX.writeFile(workbook,filename);
   }
