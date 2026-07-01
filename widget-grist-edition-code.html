@@ -734,7 +734,7 @@
     procede_non_traite = record.Procede || [];
     CO2_non_traite = record.Emissions_abattues_tCO2e_an_ || [];
     annee_non_traite = record.Annee_MES_prevue || [];
-    etat_proj_non_traite = record.Probabilite_de_mise_en_service_MES_ || [];
+    etat_proj_non_traite = record.Probabilite_de_mise_en_service_MES_Statut_du_projet || [];
     procede_traite = [];
     CO2_traite = [];
     annee_traite = [];
@@ -783,7 +783,7 @@
 
   function D_sum_CO2_etat_projet(record){
     CO2_par_etat = {};            
-    etat_par_projet = record.Probabilite_de_mise_en_service_MES_ || [];
+    etat_par_projet = record.Probabilite_de_mise_en_service_MES_Statut_du_projet || [];
     CO2_par_projet = record.Emissions_abattues_tCO2e_an_ || [];
     for (let i = 0; i < CO2_par_projet.length; i++){
       if (etat_par_projet[i] == 'Mis en service' && typeof CO2_par_projet[i] == "number"){
