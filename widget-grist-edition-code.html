@@ -649,10 +649,7 @@
   const premLigne = dataU.data.map(dU => dU.annee);         // ['2019', '2020', ...]
   const premColonne = dataU.labels;                          // ['Hydrogène', 'CCS', ...]
 
-  const colonnes = [
-    titre.concat(premLigne),
-    ...premColonne.map(p => [p, ...Array(premLigne.length).fill(0)])
-  ];
+  const colonnes = [ titre.concat(premLigne),  ...premColonne.map(p => [p, ...Array(premLigne.length).fill(0)]) ];
 
   for (let i = 0; i < premColonne.length; i++) {
     const suiteColonne = premLigne.map((_, j) => dataU.data[j].emissions[premColonne[i]] ?? 0);
@@ -1261,8 +1258,10 @@ function majGraphiques() {
   if (chartCO2Procede) chartCO2Procede.destroy();
   if (chartCO2Etat) chartCO2Etat.destroy();
   resultCO2Procede = graphique_CO2_procede_annee(filtered_records_projets,true)
-  chartCO2Procede = resultCO2Procede[0];
-  currentDataExport = resultCO2Procede[1];
+  if (resultCO2Procede){
+    chartCO2Procede = resultCO2Procede[0];
+    currentDataExport = resultCO2Procede[1];
+  }
   chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
   renderMap(filtered_records_sites,'logarithmique');
 }
@@ -1292,12 +1291,12 @@ function majGraphiques() {
     for (let r = 0 ; r < list_id.length ; r++){             // r = rows ; c = columns
       const donneeDansFiltre = valeur_filtre.includes(record[type_filtre][r]);
       const isSearch = (type_filtre == 'Nom_du_site' || type_filtre == 'name_site');
-      const isNotSansNom = record[type_filtre][r] != '';
+      const hasName = record[type_filtre][r] != '';
       const isString = typeof record[type_filtre][r] === 'string';
       const isProcede = (type_filtre == 'Procede');
 
       if(isSearch){
-        if(isNotSansNom && isString && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())){                                                 // Test de la barre de recherche (on doit exclure les sans nom '')
+        if(hasName && isString && record[type_filtre][r].toLowerCase().includes(valeur_filtre.toLowerCase())){                                                 // Test de la barre de recherche (on doit exclure les sans nom '')
           for(const c of Object.keys(record)){
             filtered_record[c].push(record[c][r]);
           }
