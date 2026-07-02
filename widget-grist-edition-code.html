@@ -1257,7 +1257,7 @@ function renderSuggestion(records, reset, filtre_on) {
 function majGraphiques() {
   if (chartCO2Procede) chartCO2Procede.destroy();
   if (chartCO2Etat) chartCO2Etat.destroy();
-  resultCO2Procede = graphique_CO2_procede_annee(filtered_records_projets,true)
+  resultCO2Procede = graphique_CO2_procede_annee(filtered_records_projets,true);
   if (resultCO2Procede){
     chartCO2Procede = resultCO2Procede[0];
     currentDataExport = resultCO2Procede[1];
