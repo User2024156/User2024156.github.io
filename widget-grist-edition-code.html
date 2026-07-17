@@ -860,7 +860,7 @@
       labels : list_procede,
       data : list_labels.map( (a,i) => ( {
         annee : a,
-        emissions : Object.fromEntries(list_procede.map(p => [p, typeof(dict_donnees[`${a}|${p}`]) == Number ? dict_donnees[`${a}|${p}`] : 0]),
+        emissions : Object.fromEntries(list_procede.map(p => [p, isNaN(dict_donnees[`${a}|${p}`]) == false ? dict_donnees[`${a}|${p}`] : 0]),
         ),})),
      };                                                                                                      // Liste d'objets pour l'extraction de données en Excel (cf Export Excel)
 
