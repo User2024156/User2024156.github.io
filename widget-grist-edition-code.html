@@ -1227,7 +1227,23 @@ function renderSuggestion(records, reset, filtre_on) {
         return;
       }
 
-      for (const p of pts) {
+      const ptsWithRadius = pts.map(p => {
+        const ind = p.index;
+        const last_ges = records['ges_2025'][ind] != -1
+          ? records['ges_2025'][ind]
+          : records['ges_2024'][ind] != -1
+            ? records['ges_2024'][ind]
+            : '0 émissions ou données incomplètes';
+        const radius = typeMarker == 'constant' ? 7 : areaMarkerfromEmission(last_ges, maxRadius, typeMarker);
+        return { p, last_ges, radius };
+      });
+
+      // 2. Tri par rayon décroissant : les grands cercles sont ajoutés en premier,
+      //    les petits en dernier — donc au-dessus dans le DOM SVG (overlayPane)
+      ptsWithRadius.sort((a, b) => b.radius - a.radius);
+
+      // 3. Boucle d'affichage inchangée, mais sur le tableau trié et sans recalcul
+      for (const { p, last_ges, radius } of ptsWithRadius) {
         const ind = p.index;
         const name = records['name_site'][ind] || "(Sans nom)";
         const region = records['Region'][ind];
@@ -1237,13 +1253,15 @@ function renderSuggestion(records, reset, filtre_on) {
         const last_ges = records['ges_2025'][ind] != -1 ? records['ges_2025'][ind] : records['ges_2024'][ind] != -1 ? records['ges_2024'][ind] : '0 émissions ou données incomplètes';
         const filiere_css = filiere.replaceAll(' ','-').replaceAll('é','e').replaceAll('â','a');
         let marker;
+        const radius = typeMarker == 'constant' ? 7 : areaMarkerfromEmission(last_ges,maxRadius,typeMarker);
         if (p.lat != null && p.lon != null && p.lat != undefined && p.lon != undefined && p.lat != 0 && p.lon != 0){
           marker = L.circleMarker([p.lat, p.lon], {
-            radius : typeMarker == 'constant' ? 7 : areaMarkerfromEmission(last_ges,maxRadius,typeMarker),
+            radius : radius,
+            zIndexOffset: 100000*(1/radius),
+            fillOpacity : 0.5*(radius/maxRadius) + 0.5,
             weight: 1,
             color: "#111827",
             fillColor: window.getComputedStyle(document.head).getPropertyValue('--color-' + filiere_css.toLowerCase()) || "#999",
-            fillOpacity: 0.9
           });
   
           marker.bindPopup(`
