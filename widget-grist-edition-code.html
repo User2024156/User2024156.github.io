@@ -947,7 +947,20 @@
           },
           plugins: {
             legend:{
-              position:'bottom'
+              position:'bottom',
+              labels:{
+                generateLabels(chart) {
+                const border = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                border.forEach(label => {
+                  if (label.text === 'Variation de production sans décarbonation') {
+                    label.lineDash = [4, 2];
+                    label.lineWidth = 1;
+                    label.strokeStyle = '#000000'; 
+                  }
+                });
+                return border;
+                }
+              }
             },
             title: {
               color:window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
