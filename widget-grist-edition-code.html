@@ -1423,6 +1423,9 @@ function majGraphiques() {
 
     for (const f of filtres) {
       const options = setSelectOptions(records_projets, f.col, f.labelAll);
+      
+      const isLocked = (f.col == 'Region' || f.col == 'Filiere') && options.length == 3; // Si une seule option disponible on l'affiche verrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
+
       const tom = new TomSelect(`#${f.id}`, {
         maxItems: null,
         create: false,
@@ -1431,23 +1434,20 @@ function majGraphiques() {
         wrapperClass: 'ts-wrapper form-group',
         controlClass: 'ts-control form-control',
         selectOnTab: true,
-        closeAfterSelect: false,
-        clearAfterSelect: true,
+        closeAfterSelect: true,
+        onItemAdd() {
+          this.setTextboxValue('');  
+        },
         onChange() {
           applyFilters();
-        }
+        },
+        plugins: isLocked ? ['no_active_items'] : [],
+        placeholder: isLocked ? "🔒 " + options[2].text : f.labelAll
       });
-      if ((f.col == 'Region' || f.col == 'Filiere') && options.length == 3){                // Si une seule option disponible on l'affiche vérrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
-        const placeholder = "🔒 " + options[2].text;
-        tom.settings.placeholder = placeholder;
-        tom.settings.controlInput = null;
-        tom.inputState();
-        tom.lock();                                          
+      if (isLocked) {                
+        tom.disable();                                          
       }
-      else{
-        tom.settings.placeholder = f.labelAll;
-        tom.inputState();
-      }
+      tom.inputState();
       document.getElementById(f.id).style.display = 'none';
     }
   }
