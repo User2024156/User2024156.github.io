@@ -1358,7 +1358,8 @@
           for (let i = 0; i < anneesMES.length; i++) {
             const annee = anneesMES[i];
             let cleAnnee;
-            if (2036 <= annee && annee <= 2040) {
+            if (annee == 'NA'){ }
+            else if (2036 <= annee && annee <= 2040) {
               cleAnnee = 2038;
             }
             else if (2041 <= annee && annee <= 2045) {
