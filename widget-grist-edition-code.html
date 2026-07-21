@@ -1224,7 +1224,6 @@ function renderSuggestion(records, reset, filtre_on) {
       if (!pts.length) {
         emptyMap.textContent = "Aucun point géolocalisé (Latitude/Longitude manquantes) pour cette sélection.";
         emptyMap.style.display = "block";
-        map.setView([46.6, 2.4], 6);
         hideShowButtons('map-container');
         return;
       }
@@ -1278,15 +1277,6 @@ function renderSuggestion(records, reset, filtre_on) {
           marker.addTo(markersLayer);
         }
       }
-
-      if (markersLayer.getLayers().length == 0){
-        emptyMap.textContent = "Aucun point géolocalisé (Latitude/Longitude manquantes) pour cette sélection.";
-        emptyMap.style.display = "block";
-        map.setView([46.6, 2.4], 6);
-        hideShowButtons('map-container');
-        return;
-      }
-
 
       // Zoom auto sur les points
       const boundsHorsDrom = L.latLngBounds(pts.map(p => records['Region'][p.index] != 'DROM' ? [p.lat, p.lon] : [46.6, 2.4]));
@@ -1485,7 +1475,7 @@ function majGraphiques() {
 
   function clearFilters() {
     document.querySelectorAll('select').forEach(el => {
-      if (el.tomselect) el.tomselect.clear();
+      if (el.tomselect) el.tomselect.clear(true);           // true rend l'évènement 'silent' donc ne déclenche pas les actions onChange : toutes les majde graphique
     });
     document.getElementById("search-by-name").value = "";
     renderSuggestion(filtered_records_sites, true, false);
