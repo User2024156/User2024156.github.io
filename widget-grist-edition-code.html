@@ -1422,14 +1422,19 @@ function majGraphiques() {
     ];
 
     for (const f of filtres) {
+    const options = setSelectOptions(records_projets, f.col, f.labelAll);
+    if ((f.col == 'Region' || f.col == 'Filiere') && options.length == 2){
+      options.splice(0,1);                                                      // On enlève 'Tous' de la liste avec un seul élément 
+    }
       const tom = new TomSelect(`#${f.id}`, {
         maxItems: null,
         create: false,
-        options: setSelectOptions(records_projets, f.col, f.labelAll),
+        options: options,
         hidePlaceholder: true,
         wrapperClass: 'ts-wrapper form-group',
         controlClass: 'ts-control form-control',
         selectOnTab: true,
+        clearAfterSelect: true,
         onChange() {
           applyFilters();
         }
