@@ -1436,11 +1436,11 @@ function majGraphiques() {
           applyFilters();
         }
       });
-      if ((f.col == 'Region' || f.col == 'Filiere') && options.length == 2){                // Si une seule option disponible on l'affiche vérrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
-        const placeholder = "🔒" + options[1].text;
+      if ((f.col == 'Region' || f.col == 'Filiere') && options.length == 3){                // Si une seule option disponible on l'affiche vérrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
+        const placeholder = "🔒 " + options[2].text;
         tom.settings.placeholder = placeholder
         tom.inputState();
-        tom.lock();                                               
+        tom.lock();                                          
       }
       else{
         tom.settings.placeholder = f.labelAll;
