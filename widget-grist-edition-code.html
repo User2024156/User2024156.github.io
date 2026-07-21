@@ -1438,7 +1438,8 @@ function majGraphiques() {
       });
       if ((f.col == 'Region' || f.col == 'Filiere') && options.length == 3){                // Si une seule option disponible on l'affiche vérrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
         const placeholder = "🔒 " + options[2].text;
-        tom.settings.placeholder = placeholder
+        tom.settings.placeholder = placeholder;
+        tom.settings.controlInput = null;
         tom.inputState();
         tom.lock();                                          
       }
