@@ -1034,6 +1034,7 @@
     },
     options : {
       cutout: '60%',
+      devicePixelRatio: window.devicePixelRatio * 2,
       plugins: {
           legend:{
             position:'bottom'
@@ -1423,7 +1424,7 @@ function majGraphiques() {
 
     for (const f of filtres) {
       const options = setSelectOptions(records_projets, f.col, f.labelAll);
-      
+
       const isLocked = (f.col == 'Region' || f.col == 'Filiere') && options.length == 3; // Si une seule option disponible on l'affiche verrouillée et on enlève la possibilité d'intéragir (utile surtout pour les utilisateurs restreints)
 
       const tom = new TomSelect(`#${f.id}`, {
