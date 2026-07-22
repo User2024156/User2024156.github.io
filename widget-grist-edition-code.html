@@ -415,29 +415,29 @@
       margin-top: 6px;
     }
 
-    .chart-wrapper {
+    .chart-procede-wrapper {
       position: relative;
       margin-bottom: 40px;
     }
 
 
-    .canvas-charts-1-hidden {
+    .canvas-charts-procede-1-hidden {
       display: none !important;
     }
 
-    .canvas-charts-1-shown {
+    .canvas-charts-procede-1-shown {
       display: flex;
       width: 100%;
       height: 600px;
       gap: 30px;
     }
 
-    .pie-chart {
+    .procede- {
       flex: 1;
       position: relative;
     }
 
-    .bar-chart-annees {
+    .procede-bar-chart-annee {
       flex: 3;
       position: relative;
     }
@@ -765,18 +765,18 @@
         <div id="map-buttons">
           <button class="btn secondary" onclick="exportToExcel(currentDataExport,'Extraction_Base_Projet_filtrée.xlsx')"
             id="export-button-charts">Exporter données</button>
-          <button class='btn secondary' onclick="hideShowButtons('canvas-charts-1')"
+          <button class='btn secondary' onclick="hideShowButtons('canvas-charts-procede-1')"
             id="hide-button-charts">Cacher</button>
         </div>
       </header>
 
 
-      <div class="chart-wrapper">
-        <div id='canvas-charts-1' class='canvas-charts-1-shown'>
-          <div class='pie-chart'>
+      <div class="chart-procede-wrapper">
+        <div id='canvas-charts-procede-1' class='canvas-charts-procede-1-shown'>
+          <div class='procede-pie-chart'>
             <canvas id="pieChartCO2parEtat"></canvas>
           </div>
-          <div class='bar-chart-annees'>
+          <div class='procede-bar-chart-annee'>
             <canvas id="barChartCO2parAnnee"></canvas>
           </div>
         </div>
@@ -1084,16 +1084,16 @@
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
           const btns = [document.getElementById('hide-button-charts'), document.getElementById('export-button-charts')];
-          let doc = document.getElementById('canvas-charts-1');
+          let doc = document.getElementById('canvas-charts-procede-1');
           if (!cles.length) {
-            doc.className = 'canvas-charts-1-hidden';
+            doc.className = 'canvas-charts-procede-1-hidden';
             if (btnClear == true) {
               btns[0].style.display = 'none';
               btns[1].style.display = 'none';
             }
             return;
           }
-          doc.className = 'canvas-charts-1-shown';
+          doc.className = 'canvas-charts-procede-1-shown';
           if (btnClear == true) {
             btns[0].style.display = 'block';
             btns[0].textContent = 'Cacher';
@@ -1388,16 +1388,16 @@
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
           const btns = [document.getElementById('hide-button-charts'), document.getElementById('export-button-charts')];
-          let doc = document.getElementById('canvas-charts-1');
+          let doc = document.getElementById('canvas-charts-procede-1');
           if (!cles.length) {
-            doc.className = 'canvas-charts-1-hidden';
+            doc.className = 'canvas-charts-procede-1-hidden';
             if (btnClear == true) {
               btns[0].style.display = 'none';
               btns[1].style.display = 'none';
             }
             return;
           }
-          doc.className = 'canvas-charts-1-shown';
+          doc.className = 'canvas-charts-procede-1-shown';
           if (btnClear == true) {
             btns[0].style.display = 'block';
             btns[0].textContent = 'Cacher';
