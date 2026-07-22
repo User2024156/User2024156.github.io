@@ -11,6 +11,8 @@
 
   <!-- Chart.js (Graphs) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Librairie motifs de remplissage Chart.js -->
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/patternomaly/1.3.2/patternomaly.min.js"></script>
 
   <!-- Leaflet (carte) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -60,6 +62,18 @@
       --color-procede-anode-inerte: #000000;
       --color-procede-intrant-decarb: #A4FF90;
       --color-procede-report-gaz-nat: #C7835E;
+
+      --color-aide-aogpid: #0070C0;
+      --color-aide-bciat: #203864;
+      --color-aide-demibac: #7F7F7F;
+      --color-aide-df: #9DC3E6;
+      --color-aide-di: #DEEBF7;
+      --color-aide-ibac-pme: #ADB9CA;
+      --color-aide-induss-ee: #548235;
+      --color-aide-solinbac: #70AD47;
+      --color-aide-zibac: #A9D18E;
+      --color-aide-cee: #7030A0;
+
 
 
       --color-sante: #BFBFBF;
@@ -1373,7 +1387,7 @@
           const D = {};
 
           const anneesMES = record.Annee_MES_estimee;
-          const aides = record.Nom_du_dispositif.map(a => a.replace(/[0-9]/g, ''));      // On retire tous les nombre des dispositifs d'aide (dates)
+          const aides =  regroupAides(record.Nom_du_dispositif.map(a => a.replace(/[0-9]/g, '')));      // On retire tous les nombre des dispositifs d'aide (dates)
           const co2_abattu = record.Gain_GES_an_tCO2eq_previsionnels;
           const engagement = record.Engage_Desengage;
 
@@ -1401,7 +1415,24 @@
           }
           return D;
         }
-
+        
+        function regroupAides(list_aide){
+          list_aide_regroupe = list_aide.map( a => {
+            if (a.includes('BCIAT')){
+              return 'BCIAT';
+            }
+            else if (a.includes('DI')){
+              return 'DI';
+            }
+            else if (a.endsWith(' ')){
+              return a.slice(0,-1);
+            }
+            else {
+              return a;
+            }
+          });
+          return list_aide_regroupe;
+        }
 
 
         function graphique_abattement_par_annee_par_aide(record, btnClear) {
@@ -1435,43 +1466,39 @@
           list_annees[list_annees.length - 3] = 2038;
 
           const list_aide = [...new Set(cles.map(k => k.split('|')[1]))];
-          // let backgroundColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
-          // let borderColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,0)');
-          // let dashedBorders = Array.from({ length: list_aide.length }, (_, i) => false);
-          // let bases = Array.from({ length: list_aide.length }, (_, i) => null);
-          let datas = list_aide.map(p => list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0));
+          let backgroundColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
+          let borderColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,0)');
+          let dashedBorders = Array.from({ length: list_aide.length }, (_, i) => false);
+          let pointStyle = Array.from({ length: list_aide.length }, (_, i) => false);
 
 
           ///  Style du graph avec couleurs par type d'aides à refaire !!  /// 
 
-          /*
-
           for (let i = 0; i < list_aide.length; i++) {
-            if (list_aide[i] == 'Hydrogène') {
-              backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-hydrogene');
+            if (list_aide[i].endsWith('Engagé et MES')) {
+              backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`);
             }
-            else if (list_aide[i] == 'Variation de production sans décarbonation') {
+            else if (list_aide[i].endsWith('Désengagé')) {
               backgroundColors[i] = 'transparent';
-              borderColors[i] = '#000000';
+              borderColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`);
               dashedBorders[i] = true;
-              bases[i] = 0;
             }
-            else if (list_aide[i] == 'CCS') {
-              backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-ccs');
+            else {
+              backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`));
             }
           }
 
-          */
 
           ///  Style du graph avec couleurs par type d'aides à refaire !!  ///
 
 
-          const datasets = list_aide.map((p, i) => ({
-            label: p,
-            data: list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0),
-            // backgroundColor: backgroundColors[i % backgroundColors.length],
-            // borderColor: borderColors[i],
-            // dashed: dashedBorders[i],
+          const datasets = list_aide.map((aide,i) => ({
+            label: aide,
+            data: list_annees.map(a => dict_donnees[`${a}|${aide}`] ?? 0),
+            backgroundColor: backgroundColors[i % backgroundColors.length],
+            borderColor: borderColors[i],
+            dashed: dashedBorders[i],
+            pointStyle : pointStyle[i],
             stack: 'stack1',
             skipNull: true,
           }))
