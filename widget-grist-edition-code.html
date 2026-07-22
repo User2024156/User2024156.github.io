@@ -798,7 +798,7 @@
       <div class="chart-wrapper">
         <div id='canvas-charts-aide-1' class='canvas-charts-1-shown'>
           <div class='pie-chart'>
-            <canvas id="pieChartCO2parEtat"></canvas>
+            <canvas id="pieChartCO2parEtatAide"></canvas>
           </div>
           <div class='bar-chart-annee'>
             <canvas id="barChartCO2parAnneeAide"></canvas>
@@ -808,7 +808,7 @@
 
       <!-- Carte des sites ETS sélectionnés par les filtres -->
 
-      <header class='section-header-procede'>
+      <header class='section-header'>
         <h1>Carte des sites ETS concernés</h1>
         <div id="map-buttons">
           <button class="btn secondary" onclick="redrawMap('constant')" id="const-button-map">Rayons constants</button>
@@ -1096,6 +1096,7 @@
 
         let chartCO2Procede = null;
         let chartCO2Etat = null;
+        let chartCO2Aide = null;
 
         let map;
         let markersLayer;
@@ -1104,7 +1105,7 @@
 
           const dict_donnees = D_CO2_procede_annee(record);
           const cles = Object.keys(dict_donnees);
-          const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
+          const list_annees = Array.from({ length: 20 }, (_, i) => 2019 + i);
           const btns = [document.getElementById('hide-button-charts-procede'), document.getElementById('export-button-charts-procede')];
           let doc = document.getElementById('canvas-charts-procede-1');
           if (!cles.length) {
@@ -1403,22 +1404,22 @@
 
 
 
-        function graphique_abattement_par_annee_par_aide(record) {
+        function graphique_abattement_par_annee_par_aide(record, btnClear) {
 
           const dict_donnees = D_CO2_aide_annee(record);
           const cles = Object.keys(dict_donnees);
-          const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
+          const list_annees = Array.from({ length: 20 }, (_, i) => 2019 + i);
           const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
           let doc = document.getElementById('canvas-charts-aide-1');
           if (!cles.length) {
-            doc.className = 'canvas-charts-aide-1-hidden';
+            doc.className = 'canvas-charts-1-hidden';
             if (btnClear == true) {
               btns[0].style.display = 'none';
               btns[1].style.display = 'none';
             }
             return;
           }
-          doc.className = 'canvas-charts-aide-1-shown';
+          doc.className = 'canvas-charts-1-shown';
           if (btnClear == true) {
             btns[0].style.display = 'block';
             btns[0].textContent = 'Cacher';
@@ -1749,11 +1750,13 @@
         function majGraphiques() {
           if (chartCO2Procede) chartCO2Procede.destroy();
           if (chartCO2Etat) chartCO2Etat.destroy();
+          if (chartCO2Aide) chartCO2Aide.destroy();
           resultCO2Procede = graphique_CO2_procede_annee(filtered_records_projets, true);
           if (resultCO2Procede) {
             chartCO2Procede = resultCO2Procede[0];
             currentDataExport = resultCO2Procede[1];
           }
+          chartCO2Aide = graphique_abattement_par_annee_par_aide(filtered_records_aides,true);
           chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
           renderMap(filtered_records_sites, 'logarithmique');
         }
@@ -1994,6 +1997,8 @@
           graphique_CO2_procede_annee(filtered_records_projets, true)[0];
 
           graphique_CO2_etat_projet(filtered_records_projets);
+
+          graphique_abattement_par_annee_par_aide(filtered_records_aides, true);
 
         }
 
