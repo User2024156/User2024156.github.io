@@ -1439,7 +1439,7 @@
 
           const dict_donnees = D_CO2_aide_annee(record);
           const cles = Object.keys(dict_donnees);
-          const list_annees = Array.from({ length: 20 }, (_, i) => 2019 + i);
+          const list_annees = Array.from({ length: 17 }, (_, i) => 2022 + i);
           const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
           let doc = document.getElementById('canvas-charts-aide-1');
           if (!cles.length) {
@@ -1538,7 +1538,7 @@
                   font: { size: 15, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary'), weight: 900 },
                   align: 'center',
                   display: true,
-                  text: 'Emissions abattues par des projets soutenus par dispositif, ktCO2e/an, 2019-2050',
+                  text: 'Emissions abattues par des projets soutenus par dispositif, ktCO2e/an, 2022-2050',
                 },
                 tooltip: {
                   mode: 'point',
