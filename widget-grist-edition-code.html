@@ -415,29 +415,29 @@
       margin-top: 6px;
     }
 
-    .chart-procede-wrapper {
+    .chart-wrapper {
       position: relative;
       margin-bottom: 40px;
     }
 
 
-    .canvas-charts-procede-1-hidden {
+    .canvas-charts-1-hidden {
       display: none !important;
     }
 
-    .canvas-charts-procede-1-shown {
+    .canvas-charts-1-shown {
       display: flex;
       width: 100%;
       height: 600px;
       gap: 30px;
     }
 
-    .procede- {
+    .pie-chart {
       flex: 1;
       position: relative;
     }
 
-    .procede-bar-chart-annee {
+    .bar-chart-annee {
       flex: 3;
       position: relative;
     }
@@ -764,27 +764,51 @@
         <h1>Emissions abattues </h1>
         <div id="map-buttons">
           <button class="btn secondary" onclick="exportToExcel(currentDataExport,'Extraction_Base_Projet_filtrée.xlsx')"
-            id="export-button-charts">Exporter données</button>
+            id="export-button-charts-procede">Exporter données</button>
           <button class='btn secondary' onclick="hideShowButtons('canvas-charts-procede-1')"
-            id="hide-button-charts">Cacher</button>
+            id="hide-button-charts-procede">Cacher</button>
         </div>
       </header>
 
 
-      <div class="chart-procede-wrapper">
-        <div id='canvas-charts-procede-1' class='canvas-charts-procede-1-shown'>
-          <div class='procede-pie-chart'>
+      <div class="chart-wrapper">
+        <div id='canvas-charts-procede-1' class='canvas-charts-1-shown'>
+          <div class='pie-chart'>
             <canvas id="pieChartCO2parEtat"></canvas>
           </div>
-          <div class='procede-bar-chart-annee'>
+          <div class='bar-chart-annee'>
             <canvas id="barChartCO2parAnnee"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphs des émissions abattues par aides par années -->
+
+      <header class='section-header'>
+        <h1>Emissions abattues </h1>
+        <div id="map-buttons">
+          <button class="btn secondary" onclick="exportToExcel(currentDataExport,'Extraction_Base_Projet_filtrée.xlsx')"
+            id="export-button-charts-aide">Exporter données</button>
+          <button class='btn secondary' onclick="hideShowButtons('canvas-charts-aide-1')"
+            id="hide-button-charts-aide">Cacher</button>
+        </div>
+      </header>
+
+
+      <div class="chart-wrapper">
+        <div id='canvas-charts-aide-1' class='canvas-charts-1-shown'>
+          <div class='pie-chart'>
+            <canvas id="pieChartCO2parEtat"></canvas>
+          </div>
+          <div class='bar-chart-annee'>
+            <canvas id="barChartCO2parAnneeAide"></canvas>
           </div>
         </div>
       </div>
 
       <!-- Carte des sites ETS sélectionnés par les filtres -->
 
-      <header class='section-header'>
+      <header class='section-header-procede'>
         <h1>Carte des sites ETS concernés</h1>
         <div id="map-buttons">
           <button class="btn secondary" onclick="redrawMap('constant')" id="const-button-map">Rayons constants</button>
@@ -869,16 +893,14 @@
           let btn;
           if (divCible.className.includes('map')) {
             btn = document.getElementById('hide-button-map');
+          } else if (divCible.className.includes('chart')) {
+            btn = document.getElementById('hide-button-charts-procede');
           }
-          else if (divCible.className.includes('chart')) {
-            btn = document.getElementById('hide-button-charts');
-          }
-          if (divCible.className === `${idCible}-shown`) {
-            divCible.className = `${idCible}-hidden`;
+          if (divCible.className === 'canvas-charts-1-shown') {
+            divCible.className = 'canvas-charts-1-hidden';
             btn.textContent = 'Afficher';
-          }
-          else {
-            divCible.className = `${idCible}-shown`;
+          } else {
+            divCible.className = 'canvas-charts-1-shown';
             btn.textContent = 'Cacher';
           }
         }
@@ -1083,17 +1105,17 @@
           const dict_donnees = D_CO2_procede_annee(record);
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
-          const btns = [document.getElementById('hide-button-charts'), document.getElementById('export-button-charts')];
+          const btns = [document.getElementById('hide-button-charts-procede'), document.getElementById('export-button-charts-procede')];
           let doc = document.getElementById('canvas-charts-procede-1');
           if (!cles.length) {
-            doc.className = 'canvas-charts-procede-1-hidden';
+            doc.className = 'canvas-charts-1-hidden';
             if (btnClear == true) {
               btns[0].style.display = 'none';
               btns[1].style.display = 'none';
             }
             return;
           }
-          doc.className = 'canvas-charts-procede-1-shown';
+          doc.className = 'canvas-charts-1-shown';
           if (btnClear == true) {
             btns[0].style.display = 'block';
             btns[0].textContent = 'Cacher';
@@ -1344,7 +1366,6 @@
           return chart;
         }
 
-/*
 
         function D_CO2_aide_annee(record) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
 
@@ -1384,20 +1405,20 @@
 
         function graphique_abattement_par_annee_par_aide(record) {
 
-          const dict_donnees = D_CO2_procede_annee(record);
+          const dict_donnees = D_CO2_aide_annee(record);
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 19 }, (_, i) => 2019 + i);
-          const btns = [document.getElementById('hide-button-charts'), document.getElementById('export-button-charts')];
-          let doc = document.getElementById('canvas-charts-procede-1');
+          const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
+          let doc = document.getElementById('canvas-charts-aide-1');
           if (!cles.length) {
-            doc.className = 'canvas-charts-procede-1-hidden';
+            doc.className = 'canvas-charts-aide-1-hidden';
             if (btnClear == true) {
               btns[0].style.display = 'none';
               btns[1].style.display = 'none';
             }
             return;
           }
-          doc.className = 'canvas-charts-procede-1-shown';
+          doc.className = 'canvas-charts-aide-1-shown';
           if (btnClear == true) {
             btns[0].style.display = 'block';
             btns[0].textContent = 'Cacher';
@@ -1413,14 +1434,16 @@
           list_annees[list_annees.length - 3] = 2038;
 
           const list_aide = [...new Set(cles.map(k => k.split('|')[1]))];
-          let backgroundColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
-          let borderColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,0)');
-          let dashedBorders = Array.from({ length: list_aide.length }, (_, i) => false);
-          let bases = Array.from({ length: list_aide.length }, (_, i) => null);
+          // let backgroundColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,1)');  // Style graphique des barres du graph selon le procédé
+          // let borderColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,0)');
+          // let dashedBorders = Array.from({ length: list_aide.length }, (_, i) => false);
+          // let bases = Array.from({ length: list_aide.length }, (_, i) => null);
           let datas = list_aide.map(p => list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0));
 
 
-          ///  Style du graph avec couleurs par type d'aides à refaire !!  ///
+          ///  Style du graph avec couleurs par type d'aides à refaire !!  /// 
+
+          /*
 
           for (let i = 0; i < list_aide.length; i++) {
             if (list_aide[i] == 'Hydrogène') {
@@ -1435,17 +1458,19 @@
             else if (list_aide[i] == 'CCS') {
               backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue('--color-procede-ccs');
             }
+          }
+
+          */
 
           ///  Style du graph avec couleurs par type d'aides à refaire !!  ///
-          }
 
 
           const datasets = list_aide.map((p, i) => ({
             label: p,
             data: list_annees.map(a => dict_donnees[`${a}|${p}`] ?? 0),
-            backgroundColor: backgroundColors[i % backgroundColors.length],
-            borderColor: borderColors[i],
-            dashed: dashedBorders[i],
+            // backgroundColor: backgroundColors[i % backgroundColors.length],
+            // borderColor: borderColors[i],
+            // dashed: dashedBorders[i],
             stack: 'stack1',
             skipNull: true,
           }))
@@ -1472,7 +1497,7 @@
                   font: { size: 15, family: window.getComputedStyle(document.head).getPropertyValue('--font-primary'), weight: 900 },
                   align: 'center',
                   display: true,
-                  text: 'Emissions abattues par des projets soutenus, ktCO2e/an, 2019-2050',
+                  text: 'Emissions abattues par des projets soutenus par dispositif, ktCO2e/an, 2019-2050',
                 },
                 tooltip: {
                   mode: 'point',
@@ -1488,7 +1513,7 @@
                     },
                     title: function (context) {
                       const anneeMES = context[0].label;
-                      return `Prévisionnel des émissions abattues par procédés en ${anneeMES.toLowerCase()} (en kt CO2e)`;
+                      return `Prévisionnel des émissions abattues par dispositif d'aide en ${anneeMES.toLowerCase()} (en kt CO2e)`;
                     },
                     label: function (context) {
                       const value = context.raw; // Raw data value (e.g., 1200)
@@ -1518,7 +1543,6 @@
           return chart;
         }
 
-*/
 
 
         function renderList(records, hide) {
