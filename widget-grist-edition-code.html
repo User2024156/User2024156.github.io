@@ -1381,15 +1381,103 @@
           return chart;
         }
 
+                
+        function regroupAides(list_aide){
+          list_aide_sans_nombre = list_aide.map(a => a.replace(/[0-9]/g, ''));
+          list_aide_regroupe = list_aide.map( a => {
+            const a_norm = a.toLowerCase().replaceAll(' ','');
+            if (a_norm.includes('bciat')){
+              return 'BCIAT';
+            }
+            else if (a_norm.includes('di') || a_norm.includes('carbind')){
+              return 'DI';
+            }
+            else if (a_norm.includes('df')){
+              return 'DF';
+            }
+            else if (a_norm.includes('aogpid')){
+              return 'AOGPID';
+            }
+            else if (a_norm.includes('demibac')){
+              return 'DEMIBac';
+            }
+            else if (a_norm.includes('aoh')){
+              return 'AO H2';
+            }
+            else if (a_norm.includes('cee')){
+              return 'CEE';
+            }
+            else if (a_norm.includes('if')){
+              return 'IF';
+            }
+            else if (a_norm.includes('piiec')){
+              return 'PIIEC';
+            }
+            else if (a_norm.includes('zibac')){
+              return 'ZIBAC';
+            }
+            else if (a.endsWith(' ')){
+              return a.slice(0,-1);
+            }
+            else {
+              return a;
+            }
+          });
+          return list_aide_regroupe;
+        }
 
-        function D_CO2_aide_annee(record) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
+        function projets_Laureat_Aide(record){
+          let laureats = {
+            aide : [],
+            montant : [],
+            co2_abattu : [],
+            etat : [],
+            anneeMES : [],
+          };
+          record.forEach(r => {
+            if (r.Aide_FR_Situation == 'Lauréat' && r.Aide_FR_dans_base_aide == false){
+              laureats['aide'].push(r.Aide_FR_Nom);
+              laureats['montant'].push(r.Aide_FR_Montant);
+              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
+              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+            }
+            if (r.Aide_UE_Situation == 'Lauréat' && r.Aide_UE_dans_base_aide == false){
+              laureats['aide'].push(r.Aide_UE_Nom);
+              laureats['montant'].push(r.Aide_UE_Montant);
+              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
+              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+            }
+            if (r.Aide_autre_Situation == 'Lauréat' && r.Aide_autre_dans_base_aide == false){
+              laureats['aide'].push('Aide autre');
+              laureats['montant'].push(r.Aide_autre_Montant);
+              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
+              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+            }
+          });
+          return laureats;
+        }
+
+        function concatenation_Aides_Projets(record_aide, projets_laureats){
+          const anneesMES = record_aide.Annee_MES_estimee.concat(projets_laureats['anneeMES']);
+          const co2_abattu = record_aide.Gain_GES_an_tCO2eq_previsionnels.concat(projets_laureats['co2_abattu']);
+          const engagement = record_aide.Engage_Desengage.concat(projets_laureats['etat']);
+          const montant = record_aide.Montant_d_aide.concat(projets_laureats['montant']);
+          const aides = regroupAides(record_aide.Nom_du_dispositif.concat(projets_laureats['aide']));
+          return [anneesMES, co2_abattu, engagement, montant, aides];
+        }
+
+
+        function D_CO2_aide_annee(concat) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
 
           const D = {};
-
-          const anneesMES = record.Annee_MES_estimee;
-          const aides =  regroupAides(record.Nom_du_dispositif.map(a => a.replace(/[0-9]/g, '')));      // On retire tous les nombre des dispositifs d'aide (dates)
-          const co2_abattu = record.Gain_GES_an_tCO2eq_previsionnels;
-          const engagement = record.Engage_Desengage;
+          const anneesMES = concat[0];
+          const aides =  concat[4];      
+          const co2_abattu = concat[1];
+          const engagement = concat[2];
+          const montant = concat[3];
 
           for (let i = 0; i < anneesMES.length; i++) {
             const annee = anneesMES[i];
@@ -1415,24 +1503,7 @@
           }
           return D;
         }
-        
-        function regroupAides(list_aide){
-          list_aide_regroupe = list_aide.map( a => {
-            if (a.includes('BCIAT')){
-              return 'BCIAT';
-            }
-            else if (a.includes('DI')){
-              return 'DI';
-            }
-            else if (a.endsWith(' ')){
-              return a.slice(0,-1);
-            }
-            else {
-              return a;
-            }
-          });
-          return list_aide_regroupe;
-        }
+
 
 
         function graphique_abattement_par_annee_par_aide(record, btnClear) {
@@ -1476,15 +1547,15 @@
 
           for (let i = 0; i < list_aide.length; i++) {
             if (list_aide[i].endsWith('Engagé et MES')) {
-              backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`);
+              backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`);
             }
             else if (list_aide[i].endsWith('Désengagé')) {
               backgroundColors[i] = 'transparent';
-              borderColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`);
+              borderColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`);
               dashedBorders[i] = true;
             }
             else {
-              backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' ')[0].replace(' ','-').toLowerCase()}`));
+              backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`));
             }
           }
 
