@@ -1519,6 +1519,19 @@
               plugins: {
                 legend: {
                   position: 'bottom',
+                  labels: {
+                    generateLabels(chart) {
+                      const border = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                      border.forEach(label => {
+                        if (label.text.includes('Désengagé')){
+                          label.lineDash = [4, 2];
+                          label.lineWidth = 1;
+                          label.strokeStyle = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${label.text.split(' ')[0].replace(' ','-').toLowerCase()}`);
+                        }
+                      });
+                      return border;
+                    }
+                  }
                 },
                 title: {
                   color: window.getComputedStyle(document.head).getPropertyValue('--color-brand-blue'),
