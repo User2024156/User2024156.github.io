@@ -1434,29 +1434,29 @@
             etat : [],
             anneeMES : [],
           };
-          record.forEach(r => {
-            if (r.Aide_FR_Situation == 'Lauréat' && r.Aide_FR_dans_base_aide == false){
-              laureats['aide'].push(r.Aide_FR_Nom);
-              laureats['montant'].push(r.Aide_FR_Montant);
-              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
-              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+          for (let i = 0 ; i < record.Aide_FR_Nom.length ; i++){
+            if (record.Aide_FR_Situation[i] == 'Lauréat' && record.Aide_FR_dans_base_aide[i] == false){
+              laureats['aide'].push(record.Aide_FR_Nom[i]);
+              laureats['montant'].push(record.Aide_FR_Montant_[i]);
+              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
+              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
             }
-            if (r.Aide_UE_Situation == 'Lauréat' && r.Aide_UE_dans_base_aide == false){
-              laureats['aide'].push(r.Aide_UE_Nom);
-              laureats['montant'].push(r.Aide_UE_Montant);
-              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
-              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+            if (record.Aide_UE_Situation[i] == 'Lauréat' && record.Aide_UE_dans_base_aide[i] == false){
+              laureats['aide'].push(record.Aide_UE_Nom[i]);
+              laureats['montant'].push(record.Aide_UE_Montant_[i]);
+              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
+              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
             }
-            if (r.Aide_autre_Situation == 'Lauréat' && r.Aide_autre_dans_base_aide == false){
+            if (record.Aide_autre_Statut[i] == 'Lauréat' && record.Aide_autre_dans_base_aide[i] == false){
               laureats['aide'].push('Aide autre');
-              laureats['montant'].push(r.Aide_autre_Montant);
-              laureats['co2_abattu'].push(r.Emissions_abattues_tCO2e_an_);
-              laureats['etat'].push(r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Mis en service' ? 'Engagé et MES' : r.Probabilite_de_mise_en_service_MES_Statut_du_projet == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((r.Annee_MES_prevue && r.Annee_MES_prevue != 0) ? r.Annee_MES_prevue : null);
+              laureats['montant'].push(record.Aide_autre_Montant_[i]);
+              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
+              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
+              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
             }
-          });
+          };
           return laureats;
         }
 
@@ -1470,9 +1470,10 @@
         }
 
 
-        function D_CO2_aide_annee(concat) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
+        function D_CO2_aide_annee(records_aides,records_projets) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
 
           const D = {};
+          const concat = concatenation_Aides_Projets(records_aides,projets_Laureat_Aide(records_projets));
           const anneesMES = concat[0];
           const aides =  concat[4];      
           const co2_abattu = concat[1];
@@ -1506,9 +1507,9 @@
 
 
 
-        function graphique_abattement_par_annee_par_aide(record, btnClear) {
+        function graphique_abattement_par_annee_par_aide(records_projets, records_aides, btnClear) {
 
-          const dict_donnees = D_CO2_aide_annee(record);
+          const dict_donnees = D_CO2_aide_annee(records_projets, records_aides);
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 17 }, (_, i) => 2022 + i);
           const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
@@ -1867,7 +1868,7 @@
             chartCO2Procede = resultCO2Procede[0];
             currentDataExport = resultCO2Procede[1];
           }
-          chartCO2Aide = graphique_abattement_par_annee_par_aide(filtered_records_aides,true);
+          chartCO2Aide = graphique_abattement_par_annee_par_aide(filtered_records_aides, filtered_records_projets, true);
           chartCO2Etat = graphique_CO2_etat_projet(filtered_records_projets);
           renderMap(filtered_records_sites, 'logarithmique');
         }
@@ -2109,7 +2110,7 @@
 
           graphique_CO2_etat_projet(filtered_records_projets);
 
-          graphique_abattement_par_annee_par_aide(filtered_records_aides, true);
+          graphique_abattement_par_annee_par_aide(filtered_records_aides, filtered_records_projets, true);
 
         }
 
