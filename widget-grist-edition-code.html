@@ -1461,7 +1461,7 @@
         }
 
         function concatenation_Aides_Projets(record_aide, projets_laureats){
-          const anneesMES = record_aide.Annee_MES_estimee.concat(projets_laureats['anneeMES']);
+          const anneesMES = record_aide.Date_MES_estimee.concat(projets_laureats['anneeMES']);
           const co2_abattu = record_aide.Gain_GES_an_tCO2eq_previsionnels.concat(projets_laureats['co2_abattu']);
           const engagement = record_aide.Engage_Desengage.concat(projets_laureats['etat']);
           const montant = record_aide.Montant_d_aide.concat(projets_laureats['montant']);
@@ -1507,9 +1507,9 @@
 
 
 
-        function graphique_abattement_par_annee_par_aide(records_projets, records_aides, btnClear) {
+        function graphique_abattement_par_annee_par_aide(records_aides, records_projets, btnClear) {
 
-          const dict_donnees = D_CO2_aide_annee(records_projets, records_aides);
+          const dict_donnees = D_CO2_aide_annee(records_aides, records_projets);
           const cles = Object.keys(dict_donnees);
           const list_annees = Array.from({ length: 17 }, (_, i) => 2022 + i);
           const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
