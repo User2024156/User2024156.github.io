@@ -1587,7 +1587,7 @@
 
           const dict_donnees = D_CO2_aide_annee(records_aides, records_projets);
           const cles = Object.keys(dict_donnees);
-          const list_annees = Array.from({ length: 17 }, (_, i) => 2022 + i);
+          const list_annees = Array.from({ length: 20 }, (_, i) => 2019 + i);
           const btns = [document.getElementById('hide-button-charts-aide'), document.getElementById('export-button-charts-aide')];
           let doc = document.getElementById('canvas-charts-aide-1');
           if (!cles.length) {
