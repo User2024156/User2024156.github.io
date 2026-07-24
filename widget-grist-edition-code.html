@@ -73,6 +73,11 @@
       --color-aide-solinbac: #70AD47;
       --color-aide-zibac: #A9D18E;
       --color-aide-cee: #7030A0;
+      --color-aide-if: #CC66FF;
+      --color-aide-fonds-chaleur: #E0D6A5;
+      --color-aide-autre-aide: #000000;
+      --color-aide-ao-h2: #A4FF90;
+      --color-aide-piiec: #C7835E;
 
 
 
@@ -1382,10 +1387,10 @@
         }
 
                 
-        function regroupAides(list_aide){
-          list_aide_sans_nombre = list_aide.map(a => a.replace(/[0-9]/g, ''));
-          list_aide_regroupe = list_aide.map( a => {
-            const a_norm = a.toLowerCase().replaceAll(' ','');
+        function regroupAides(list_aide){                                                       // On rebrand tous les NOM d'aide en conservant la taille de la liste selon un format normalisé : toutes les aides qui ne correspondent pas 
+          list_aide_sans_nombre = list_aide.map(a => a ? a.replace(/[0-9]/g, '') : '');                  // ou ont un NOM NULL sont appelées 'Autre Aides'
+          list_aide_regroupe = list_aide_sans_nombre.map( a => {
+            const a_norm = typeof a === 'string' ? a.toLowerCase().replaceAll(' ','') : '';
             if (a_norm.includes('bciat')){
               return 'BCIAT';
             }
@@ -1416,17 +1421,31 @@
             else if (a_norm.includes('zibac')){
               return 'ZIBAC';
             }
-            else if (a.endsWith(' ')){
-              return a.slice(0,-1);
+            else if (a_norm.includes('fondschal')){
+              return 'Fonds Chaleur';
+            }
+            else if (a_norm.includes('ibacpme')){
+              return 'IBAC PME';
+            }
+            else if (a_norm.includes('indussee')){
+              return 'INDUSS EE';
+            }
+            else if (a_norm.includes('solinbac')){
+              return 'SOLINBAC';
             }
             else {
-              return a;
+              return 'Autre Aide';
             }
           });
           return list_aide_regroupe;
         }
 
-        function projets_Laureat_Aide(record){
+
+        function aidesBaseAides(record){
+          return [... new Set(regroupAides(record.Nom_du_dispositif))];
+        }
+
+        function projets_Laureat_Aide(record_projets,record_aides){
           let laureats = {
             aide : [],
             montant : [],
@@ -1434,38 +1453,95 @@
             etat : [],
             anneeMES : [],
           };
-          for (let i = 0 ; i < record.Aide_FR_Nom.length ; i++){
-            if (record.Aide_FR_Situation[i] == 'Lauréat' && record.Aide_FR_dans_base_aide[i] == false){
-              laureats['aide'].push(record.Aide_FR_Nom[i]);
-              laureats['montant'].push(record.Aide_FR_Montant_[i]);
-              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
-              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
-            }
-            if (record.Aide_UE_Situation[i] == 'Lauréat' && record.Aide_UE_dans_base_aide[i] == false){
-              laureats['aide'].push(record.Aide_UE_Nom[i]);
-              laureats['montant'].push(record.Aide_UE_Montant_[i]);
-              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
-              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
-            }
-            if (record.Aide_autre_Statut[i] == 'Lauréat' && record.Aide_autre_dans_base_aide[i] == false){
-              laureats['aide'].push('Aide autre');
-              laureats['montant'].push(record.Aide_autre_Montant_[i]);
-              laureats['co2_abattu'].push(record.Emissions_abattues_tCO2e_an_[i]);
-              laureats['etat'].push(record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Mis en service' ? 'Engagé et MES' : record.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] == 'Abandonné' ? 'Désengagé' : 'Engagé');
-              laureats['anneeMES'].push((record.Annee_MES_prevue[i] && record.Annee_MES_prevue[i] != 0) ? record.Annee_MES_prevue[i] : null);
+          const aides_FR = regroupAides(record_projets.Aide_FR_Nom);
+          const aides_UE = regroupAides(record_projets.Aide_UE_Nom);
+          const aides_Autre = regroupAides(record_projets.Aide_autre_Nom);
+          let projet_compte;
+          for (let i = 0 ; i < aides_FR.length ; i++){
+            projet_compte = false;
+            if (record_projets.Probabilite_de_mise_en_service_MES_Statut_du_projet[i] != 'Abandonné'){
+              if (record_projets.Aide_FR_Situation[i] != "Pas besoin d'aide" && (aidesBaseAides(record_aides).includes(aides_FR[i])) == false){
+                laureats['montant'].push(record_projets.Aide_FR_Montant_[i]);
+                laureats['co2_abattu'].push(record_projets.Emissions_abattues_tCO2e_an_[i]);
+                laureats['anneeMES'].push((record_projets.Annee_MES_prevue[i] && record_projets.Annee_MES_prevue[i] != 0) ? record_projets.Annee_MES_prevue[i] : null);
+                if (record_projets.Aide_FR_Situation[i] == 'Lauréat' && (aidesBaseAides(record_aides).includes(aides_FR[i])) == false){
+                  laureats['aide'].push(aides_FR[i]);
+                  laureats['etat'].push('Engagé');
+                }
+                else if (record_projets.Aide_FR_Situation[i] == 'Candidat' || (record_projets.Aide_FR_Situation[i] && record_projets.Aide_FR_Situation[i].includes('Intérêt'))){
+                  laureats['aide'].push(aides_FR[i]);
+                  laureats['etat'].push('Intérêt');
+                }
+                else {
+                  laureats['aide'].push('');
+                  laureats['etat'].push('n.a.');
+                }
+                projet_compte = true;
+              }
+
+              if (record_projets.Aide_UE_Situation[i] != "Pas besoin d'aide" && (aidesBaseAides(record_aides).includes(aides_UE[i])) == false){
+                laureats['montant'].push(record_projets.Aide_UE_Montant_[i]);
+                laureats['co2_abattu'].push(projet_compte ? 0 : record_projets.Emissions_abattues_tCO2e_an_[i]);
+                laureats['anneeMES'].push((record_projets.Annee_MES_prevue[i] && record_projets.Annee_MES_prevue[i] != 0) ? record_projets.Annee_MES_prevue[i] : null);
+                if (record_projets.Aide_UE_Situation[i] == 'Lauréat' && (aidesBaseAides(record_aides).includes(aides_FR[i])) == false){
+                  laureats['aide'].push(aides_UE[i]);
+                  laureats['etat'].push('Engagé');
+                }
+                else if (record_projets.Aide_UE_Situation[i] == 'Candidat' || (record_projets.Aide_UE_Situation[i] && record_projets.Aide_UE_Situation[i].includes('Intérêt'))){
+                  laureats['aide'].push(aides_UE[i]);
+                  laureats['etat'].push('Intérêt');
+                }
+                else {
+                  laureats['aide'].push('');
+                  laureats['etat'].push('n.a.');
+                }
+                projet_compte = true;
+              }
+              
+              if (record_projets.Aide_autre_Statut[i] != "Pas besoin d'aide" && (aidesBaseAides(record_aides).includes(aides_FR[i])) == false){
+                laureats['montant'].push(record_projets.Aide_autre_Montant_[i]);
+                laureats['co2_abattu'].push(projet_compte ? 0 : record_projets.Emissions_abattues_tCO2e_an_[i]);
+                laureats['anneeMES'].push((record_projets.Annee_MES_prevue[i] && record_projets.Annee_MES_prevue[i] != 0) ? record_projets.Annee_MES_prevue[i] : null);
+                if (record_projets.Aide_autre_Statut[i] == 'Lauréat' && (aidesBaseAides(record_aides).includes(aides_FR[i])) == false){
+                  laureats['aide'].push(aides_Autre[i]);
+                  laureats['etat'].push('Engagé');
+                }
+                else if (record_projets.Aide_autre_Statut[i] == 'Candidat' || (record_projets.Aide_autre_Statut[i] && record_projets.Aide_autre_Statut[i].includes('Intérêt'))){
+                  laureats['aide'].push(aides_Autre[i]);
+                  laureats['etat'].push('Intérêt');
+                }
+                else{
+                  laureats['aide'].push('');
+                  laureats['etat'].push('n.a.');
+                }
+              }
             }
           };
           return laureats;
         }
 
+        function etatBaseAide(record){                      // Exclu les aides désengagées des données
+          const aideExclu = {};
+          const keys = Object.keys(record);
+          const indicesAGarder = [];
+          for (let i = 0 ; i < record.Engage_Desengage.length ; i++){
+            if (record.Engage_Desengage[i] != 'Désengagé'){
+              indicesAGarder.push(i);
+            }
+          }
+          for (const key of keys){
+            aideExclu[key] = indicesAGarder.map(i => record[key][i]);
+          }
+          return aideExclu;
+        }
+
         function concatenation_Aides_Projets(record_aide, projets_laureats){
-          const anneesMES = record_aide.Date_MES_estimee.concat(projets_laureats['anneeMES']);
-          const co2_abattu = record_aide.Gain_GES_an_tCO2eq_previsionnels.concat(projets_laureats['co2_abattu']);
-          const engagement = record_aide.Engage_Desengage.concat(projets_laureats['etat']);
-          const montant = record_aide.Montant_d_aide.concat(projets_laureats['montant']);
-          const aides = regroupAides(record_aide.Nom_du_dispositif.concat(projets_laureats['aide']));
+          const base_Aide_Filtre = etatBaseAide(record_aide);
+          const anneesMES = base_Aide_Filtre.Date_MES_estimee.concat(projets_laureats['anneeMES']);
+          const co2_abattu = base_Aide_Filtre.Gain_GES_an_tCO2eq_previsionnels.concat(projets_laureats['co2_abattu']);
+          const engagement = base_Aide_Filtre.Engage_Desengage.map(e => 'Engagé').concat(projets_laureats['etat']);
+          const montant = base_Aide_Filtre.Montant_d_aide.concat(projets_laureats['montant']);
+          const aides = regroupAides(base_Aide_Filtre.Nom_du_dispositif).concat(projets_laureats['aide']);
           return [anneesMES, co2_abattu, engagement, montant, aides];
         }
 
@@ -1473,7 +1549,7 @@
         function D_CO2_aide_annee(records_aides,records_projets) {                     // Renvoie un dictionnaire du type : D { (année,aide) : CO2 abattu en MtCO2e/an }
 
           const D = {};
-          const concat = concatenation_Aides_Projets(records_aides,projets_Laureat_Aide(records_projets));
+          const concat = concatenation_Aides_Projets(records_aides,projets_Laureat_Aide(records_projets,records_aides));
           const anneesMES = concat[0];
           const aides =  concat[4];      
           const co2_abattu = concat[1];
@@ -1547,16 +1623,16 @@
           ///  Style du graph avec couleurs par type d'aides à refaire !!  /// 
 
           for (let i = 0; i < list_aide.length; i++) {
-            if (list_aide[i].endsWith('Engagé et MES')) {
+            if (list_aide[i].endsWith('Engagé')) {
               backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`);
             }
-            else if (list_aide[i].endsWith('Désengagé')) {
-              backgroundColors[i] = 'transparent';
-              borderColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`);
-              dashedBorders[i] = true;
+            else if (list_aide[i].endsWith('Intérêt')) {
+              backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`));
             }
             else {
-              backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`));
+              backgroundColors[i] = 'transparent';
+              borderColors[i] = 'rgba(1,1,1,255)';
+              dashedBorders[i] = true;
             }
           }
 
