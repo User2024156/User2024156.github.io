@@ -1468,7 +1468,7 @@
                   laureats['aide'].push(aides_FR[i]);
                   laureats['etat'].push('Engagé');
                 }
-                else if (record_projets.Aide_FR_Situation[i] == 'Candidat' || (record_projets.Aide_FR_Situation[i] && record_projets.Aide_FR_Situation[i].includes('Intérêt'))){
+                else if (record_projets.Aide_FR_Situation[i] == 'Candidat' || (typeof record_projets.Aide_FR_Situation[i] == 'string' && record_projets.Aide_FR_Situation[i].includes('Intérêt'))){
                   laureats['aide'].push(aides_FR[i]);
                   laureats['etat'].push('Intérêt');
                 }
@@ -1487,7 +1487,7 @@
                   laureats['aide'].push(aides_UE[i]);
                   laureats['etat'].push('Engagé');
                 }
-                else if (record_projets.Aide_UE_Situation[i] == 'Candidat' || (record_projets.Aide_UE_Situation[i] && record_projets.Aide_UE_Situation[i].includes('Intérêt'))){
+                else if (record_projets.Aide_UE_Situation[i] == 'Candidat' || (typeof record_projets.Aide_UE_Situation[i] == 'string' && record_projets.Aide_UE_Situation[i].includes('Intérêt'))){
                   laureats['aide'].push(aides_UE[i]);
                   laureats['etat'].push('Intérêt');
                 }
@@ -1506,7 +1506,7 @@
                   laureats['aide'].push(aides_Autre[i]);
                   laureats['etat'].push('Engagé');
                 }
-                else if (record_projets.Aide_autre_Statut[i] == 'Candidat' || (record_projets.Aide_autre_Statut[i] && record_projets.Aide_autre_Statut[i].includes('Intérêt'))){
+                else if (record_projets.Aide_autre_Statut[i] == 'Candidat' || (typeof record_projets.Aide_autre_Statut[i] == 'string' && record_projets.Aide_autre_Statut[i].includes('Intérêt'))){
                   laureats['aide'].push(aides_Autre[i]);
                   laureats['etat'].push('Intérêt');
                 }
@@ -1618,21 +1618,36 @@
           let borderColors = Array.from({ length: list_aide.length }, (_, i) => 'rgba(0,0,0,0)');
           let dashedBorders = Array.from({ length: list_aide.length }, (_, i) => false);
           let pointStyle = Array.from({ length: list_aide.length }, (_, i) => false);
-
+          let order = Array.from({ length: list_aide.length }, (_, i) => 0);
+          
 
           ///  Style du graph avec couleurs par type d'aides à refaire !!  /// 
 
           for (let i = 0; i < list_aide.length; i++) {
             if (list_aide[i].endsWith('Engagé')) {
+              if (list_aide[i].includes('Autre Aide')){
+                order[i] += 1000;
+              }
+              else {
+                order[i] += 10*i;
+              }
               backgroundColors[i] = window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`);
             }
             else if (list_aide[i].endsWith('Intérêt')) {
+              if (list_aide[i].includes('Autre Aide')){
+                order[i] += 1000;
+              }
+              else {
+                order[i] += 10*i;
+              }
+              order[i] += 1;
               backgroundColors[i] = pattern.draw('diagonal',window.getComputedStyle(document.head).getPropertyValue(`--color-aide-${list_aide[i].split(' :')[0].replace(' ','-').toLowerCase()}`));
             }
             else {
               backgroundColors[i] = 'transparent';
               borderColors[i] = 'rgba(1,1,1,255)';
               dashedBorders[i] = true;
+              order[i] += 100000;
             }
           }
 
@@ -1643,6 +1658,7 @@
           const datasets = list_aide.map((aide,i) => ({
             label: aide,
             data: list_annees.map(a => dict_donnees[`${a}|${aide}`] ?? 0),
+            order : order[i],
             backgroundColor: backgroundColors[i % backgroundColors.length],
             borderColor: borderColors[i],
             dashed: dashedBorders[i],
